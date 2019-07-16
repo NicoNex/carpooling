@@ -1,0 +1,10 @@
+STRPTIME
+Per convertire il tempo da una stringa ben formata in time_t usa strptime
+char *strptime(const char *s, const char *format, struct tm *tm);
+http://man7.org/linux/man-pages/man3/strptime.3.html
+
+
+STRFTIME
+Per fare il contrario usare strftime
+size_t strftime(char *str, size_t maxsize, const char *format, const struct tm *timeptr);
+https://www.tutorialspoint.com/c_standard_library/c_function_strftime.htm
