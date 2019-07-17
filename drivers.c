@@ -9,10 +9,8 @@
 #include "include/drivers.h"
 
 
-list_t drivers_list = NULL;
-
-
-void load_drivers(const char *filepath) {
+list_t load_drivers(const char *filepath) {
+	list_t drivers_list = NULL;
 	FILE *fp;
 	char *buffer;
 	long file_size;
@@ -23,7 +21,7 @@ void load_drivers(const char *filepath) {
 	fp = fopen(filepath, "rb");
 	if (fp == NULL) {
 		fprintf(stderr, "error: cannot open file %s", filepath);
-		return;
+		return NULL;
 	}
 
 	fseek(fp, 0, SEEK_END);
@@ -64,4 +62,12 @@ void load_drivers(const char *filepath) {
 
 		drivers_list = list_add(drivers_list, drv);
 	}
+
+	return drivers_list;
+
+	// for (list_t tmp = drivers_list; tmp != NULL; tmp = next(tmp)) {
+	// 	struct driver *drv = tmp->ptr;
+
+	// 	printf("Name: %s\nVehicle: %s\nSeats: %d\n\n", drv->name, drv->vehicle, drv->seats);
+	// }
 }

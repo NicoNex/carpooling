@@ -19,7 +19,7 @@ struct driver {
 };
 
 
-void load_drivers(const char *filepath);
+list_t load_drivers(const char *filepath);
 
 
 #endif // DRIVERS_H_

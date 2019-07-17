@@ -63,16 +63,25 @@ list_t list_del(struct node *first, struct node *delptr) {
 }
 
 
-void *range(struct node *node) {
-	static struct node *current = NULL;
-	void *ptr;
+// void *range(static struct node *node) {
+// 	void *ptr;
 
-	if (current == NULL)
-		return NULL;
+// 	if (current == NULL)
+// 		return NULL;
 
-	ptr = current->ptr;
-	current = current->next;
-	return ptr;
+// 	ptr = current->ptr;
+// 	current = current->next;
+// 	return ptr;
+// }
+
+
+struct node *next(struct node *current) {
+	return current->next;
+}
+
+
+void *get_object(struct node *current) {
+	return current->ptr;
 }
 
 

@@ -3,6 +3,7 @@
  * Copyright (C) 2019  Nicolò Santamaria
  */
 
+#include <stdio.h>
 #include <string.h>
 
 #include "utron/bot.h"
@@ -15,6 +16,7 @@
 
 struct bot {
 	int64_t chat_id;
+	list_t drivers;
 };
 
 
@@ -22,7 +24,20 @@ struct bot *new_bot(int64_t chat_id) {
 	struct bot *bot = malloc(sizeof(struct bot));
 
 	bot->chat_id = chat_id;
+	bot->drivers = load_drivers("res/drivers.json");
 	return bot;
+}
+
+
+void send_drivers(struct bot *bot) {
+	for (list_t tmp = bot->drivers; tmp != NULL; tmp = next(tmp)) {
+		struct driver *drv = get_object(tmp);
+		char msg[512];
+
+		snprintf(msg, 512, "Name: %s%%0AVehicle: %s%%0ASeats: %d%%0A%%0A", drv->name, drv->vehicle, drv->seats);
+		tg_send_message(msg, bot->chat_id);
+	}
+
 }
 
 
@@ -41,9 +56,10 @@ void *update_bot(void *vargp) {
 		const char *text = json_object_get_string(textobj);
 		const char *username = json_object_get_string(usrobj);
 
-		if (!strcmp(text, "/ping")) {
+		if (!strcmp(text, "/ping"))
 			tg_send_message("Hey!", bot->chat_id);
-			load_drivers("res/drivers.json");
-		}
+
+		else if (!strcmp(text, "/drivers"))
+			send_drivers(bot);
 	}
 }

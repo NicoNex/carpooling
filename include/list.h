@@ -31,9 +31,20 @@ list_t list_add(list_t list, void *ptr);
 list_t list_del(list_t list, struct node *node);
 
 /*
- * TODO: doc
+ * TODO: doc, broken
  */
 void *range(list_t list);
+
+
+/*
+ * Returns the next element in a list
+ */
+list_t next(list_t current);
+
+/*
+ * Returns the object contained in a node
+ */
+void *get_object(list_t current);
 
 /*
  * TODO: doc
