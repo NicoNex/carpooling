@@ -8,7 +8,7 @@
 
 
 struct node {
-	void *objptr;
+	void *ptr;
 	struct node *next;
 };
 
@@ -18,17 +18,22 @@ typedef struct node *list_t;
 /*
  * TODO: doc
  */
-list_t new_list(void *objptr);
+list_t new_list(void *ptr);
 
 /*
  * TODO: doc
  */
-list_t list_add(list_t list, void *objptr);
+list_t list_add(list_t list, void *ptr);
 
 /*
  * TODO: doc
  */
 list_t list_del(list_t list, struct node *node);
+
+/*
+ * TODO: doc
+ */
+void *range(list_t list);
 
 /*
  * TODO: doc

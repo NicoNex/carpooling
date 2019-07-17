@@ -7,6 +7,7 @@
 
 #include "utron/bot.h"
 #include "utron/engine.h"
+#include "include/drivers.h"
 
 
 #define BOTNAME "carpooling"
@@ -40,7 +41,9 @@ void *update_bot(void *vargp) {
 		const char *text = json_object_get_string(textobj);
 		const char *username = json_object_get_string(usrobj);
 
-		if (!strcmp(text, "/ping"))
+		if (!strcmp(text, "/ping")) {
 			tg_send_message("Hey!", bot->chat_id);
+			load_drivers("res/drivers.json");
+		}
 	}
 }

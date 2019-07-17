@@ -6,10 +6,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "list.h"
+#include "include/list.h"
 
 
-list_t new_list(void *objptr) {
+list_t new_list(void *ptr) {
 	struct node *node = malloc(sizeof(node));
 
 	if (node == NULL) {
@@ -17,13 +17,13 @@ list_t new_list(void *objptr) {
 		return NULL;
 	}
 
-	node->objptr = objptr;
+	node->ptr = ptr;
 	node->next = NULL;
 	return node;
 }
 
 
-list_t list_add(struct node *first, void *objptr) {
+list_t list_add(struct node *first, void *ptr) {
 	struct node *node = malloc(sizeof(node));
 
 	if (node == NULL) {
@@ -31,7 +31,7 @@ list_t list_add(struct node *first, void *objptr) {
 		return first;
 	}
 
-	node->objptr = objptr;
+	node->ptr = ptr;
 	node->next = first;
 	return node;
 }
@@ -60,6 +60,19 @@ list_t list_del(struct node *first, struct node *delptr) {
 	}
 
 	return first;
+}
+
+
+void *range(struct node *node) {
+	static struct node *current = NULL;
+	void *ptr;
+
+	if (current == NULL)
+		return NULL;
+
+	ptr = current->ptr;
+	current = current->next;
+	return ptr;
 }
 
 
