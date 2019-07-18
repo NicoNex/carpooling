@@ -25,7 +25,7 @@ list_t load_drivers(const char *filepath);
 void dispose_drivers(const list_t drivers);
 
 // Updates the driver
-// void update_driver(const list_t drivers, const struct driver *drv);
+void update_driver(const char *filepath, struct driver *drv);
 
 struct driver *get_driver(list_t drivers, const int id);
 

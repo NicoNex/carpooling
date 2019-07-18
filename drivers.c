@@ -9,14 +9,11 @@
 #include "include/drivers.h"
 
 
-list_t load_drivers(const char *filepath) {
-	list_t drivers_list = NULL;
+static json_object *get_json_from_file(const char *filepath) {
 	FILE *fp;
 	char *buffer;
 	long file_size;
-	int drivers_num;
 	struct json_object *json;
-	struct json_object *drivers_json;
 
 	fp = fopen(filepath, "rb");
 	if (fp == NULL) {
@@ -35,6 +32,16 @@ list_t load_drivers(const char *filepath) {
 		free(buffer);
 	}
 	fclose(fp);
+
+	return json;
+}
+
+
+list_t load_drivers(const char *filepath) {
+	list_t drivers_list = NULL;
+	int drivers_num;
+	struct json_object *json = get_json_from_file(filepath);
+	struct json_object *drivers_json;
 
 	json_object_object_get_ex(json, "drivers", &drivers_json);
 	drivers_num = json_object_array_length(drivers_json);
@@ -77,6 +84,40 @@ struct driver *get_driver(list_t node, const int id) {
 
 	return get_driver(node->next, id);
 
+}
+
+
+// debug the write on file since it doesn't work
+void update_driver(const char *filepath, struct driver *drv) {
+	struct json_object *json = get_json_from_file(filepath);
+	struct json_object *drivers_json;
+	int drivers_num;
+
+	json_object_object_get_ex(json, "drivers", &drivers_json);
+	drivers_num = json_object_array_length(drivers_json);
+	for (int i = 0; i < drivers_num; i++) {
+		struct json_object *driverobj, *id, *rating, *seats;
+
+		driverobj = json_object_array_get_idx(drivers_json, i);
+		json_object_object_get_ex(driverobj, "id", &id);
+
+		if (drv->id == json_object_get_int(id)) {
+			json_object_object_get_ex(driverobj, "rating", &rating);
+			json_object_object_get_ex(driverobj, "seats", &seats);
+
+			json_object_set_int(rating, drv->rating);
+			json_object_set_int(seats, drv->seats);
+			break;
+		}
+	}
+
+	// write the json to the file
+	char *text = json_object_to_json_string(json);
+	FILE *fp;
+	fp = fopen("test.json", "wb");
+	fputs(text, fp);
+	fclose(fp);
+	free(text);
 }
 
 
