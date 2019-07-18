@@ -6,6 +6,7 @@
 #include <json.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "include/drivers.h"
 
 
@@ -87,7 +88,6 @@ struct driver *get_driver(list_t node, const int id) {
 }
 
 
-// debug the write on file since it doesn't work
 void update_driver(const char *filepath, struct driver *drv) {
 	struct json_object *json = get_json_from_file(filepath);
 	struct json_object *drivers_json;
@@ -114,8 +114,8 @@ void update_driver(const char *filepath, struct driver *drv) {
 	// write the json to the file
 	char *text = json_object_to_json_string(json);
 	FILE *fp;
-	fp = fopen("test.json", "wb");
-	fputs(text, fp);
+	fp = fopen(filepath, "w");
+	fwrite(text, 1, strlen(text), fp);
 	fclose(fp);
 	free(text);
 }

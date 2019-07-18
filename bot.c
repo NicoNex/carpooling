@@ -44,7 +44,7 @@ void send_drivers(struct bot *bot) {
 		struct driver *drv = get_object(tmp);
 		char msg[512];
 
-		snprintf(msg, 512, "Name: %s%%0AID: %d%%0AVehicle: %s%%0ASeats: %d%%0A%%0A", drv->name, drv->id, drv->vehicle, drv->seats);
+		snprintf(msg, 512, "ID: %d%%0AName: %s%%0AVehicle: %s%%0ASeats: %d%%0ARating: %d%%0A%%0A", drv->id, drv->name, drv->vehicle, drv->seats, drv->rating);
 		tg_send_message(msg, bot->chat_id);
 	}
 
@@ -69,7 +69,7 @@ void *update_bot(void *vargp) {
 		if (!strcmp(text, "/dismiss")) {
 			bot->mode = DEFAULT;
 			tg_send_message("Action dismissed", bot->chat_id);
-			return;
+			return NULL;
 		}
 
 		if (bot->mode == DEFAULT) {
@@ -90,7 +90,6 @@ void *update_bot(void *vargp) {
 		else {
 			switch (bot->mode) {
 				case SELECT_DRIVER: {
-					// debug this shit
 					int id = strtol(text, NULL, 10);
 					bot->drvtmp = get_driver(bot->drivers, id);
 
@@ -111,14 +110,17 @@ void *update_bot(void *vargp) {
 
 					if (rating < 1 || rating > 11) {
 						char msg[512];
-						snprintf(msg, 512, "Valutazione incorretta.%0AScrivi la valutazione da dare a %s, da 1 a 10", bot->drvtmp->name);
+						snprintf(msg, 512, "Valutazione incorretta.%%0AScrivi la valutazione da dare a %s, da 1 a 10", bot->drvtmp->name);
 						tg_send_message(msg, bot->chat_id);
+						break;
 					}
 
 					bot->drvtmp->rating = rating;
 					update_driver("res/drivers.json", bot->drvtmp);
+					bot->drivers = load_drivers("res/drivers.json");
 					bot->drvtmp = NULL;
 					bot->mode = DEFAULT;
+					tg_send_message("Grazie per il tuo feedback!", bot->chat_id);
 					break;
 				}
 
