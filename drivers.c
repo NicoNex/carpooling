@@ -64,10 +64,26 @@ list_t load_drivers(const char *filepath) {
 	}
 
 	return drivers_list;
+}
 
-	// for (list_t tmp = drivers_list; tmp != NULL; tmp = next(tmp)) {
-	// 	struct driver *drv = tmp->ptr;
 
-	// 	printf("Name: %s\nVehicle: %s\nSeats: %d\n\n", drv->name, drv->vehicle, drv->seats);
-	// }
+struct driver *get_driver(list_t node, const int id) {
+	if (node == NULL)
+		return NULL;
+
+	struct driver *drv = node->ptr;
+	if (drv->id == id)
+		return drv;
+
+	return get_driver(node->next, id);
+
+}
+
+
+// TODO: maybe make this recursive
+void dispose_drivers(const list_t lst) {
+	for (list_t tmp = lst; tmp != NULL; tmp = next(tmp))
+		free(tmp->ptr);
+
+	dispose_list(lst);
 }
