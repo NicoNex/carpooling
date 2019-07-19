@@ -8,44 +8,18 @@
 #include <stdlib.h>
 #include <string.h>
 #include "include/drivers.h"
-
-
-static json_object *get_json_from_file(const char *filepath) {
-	FILE *fp;
-	char *buffer;
-	long file_size;
-	struct json_object *json;
-
-	fp = fopen(filepath, "rb");
-	if (fp == NULL) {
-		fprintf(stderr, "error: cannot open file %s", filepath);
-		return NULL;
-	}
-
-	fseek(fp, 0, SEEK_END);
-	file_size = ftell(fp);
-	rewind(fp);
-
-	if (file_size > 0) {
-		buffer = malloc(file_size);
-		fread(buffer, file_size, 1, fp);
-		json = json_tokener_parse(buffer);
-		free(buffer);
-	}
-	fclose(fp);
-
-	return json;
-}
+#include "include/filehandler.h"
 
 
 list_t load_drivers(const char *filepath) {
 	list_t drivers_list = NULL;
 	int drivers_num;
-	struct json_object *json = get_json_from_file(filepath);
+	struct json_object *json = load_json_from_file(filepath);
 	struct json_object *drivers_json;
 
 	json_object_object_get_ex(json, "drivers", &drivers_json);
 	drivers_num = json_object_array_length(drivers_json);
+
 	for (int i = 0; i < drivers_num; i++) {
 		struct json_object *driverobj, *id, *name, *age, *vehicle, *rating, *seats;
 
@@ -89,7 +63,7 @@ struct driver *get_driver(list_t node, const int id) {
 
 
 void update_driver(const char *filepath, struct driver *drv) {
-	struct json_object *json = get_json_from_file(filepath);
+	struct json_object *json = load_json_from_file(filepath);
 	struct json_object *drivers_json;
 	int drivers_num;
 
