@@ -12,6 +12,7 @@
 
 
 struct travel {
+	int id;
 	int driver_id;
 	int64_t unix_time;
 	char *destination;
@@ -21,14 +22,16 @@ struct travel {
 // Loads the drivers list from disk from a json file.
 list_t load_travels(const char *filepath);
 
+// Updates the driver on the file
+void update_travel(const char *filepath, struct travel *trv);
+
+// returns the travel pointer in a list with the corresponding id
+struct travel *get_travel(list_t travels, const int id);
+
+
 // Frees the memory occupied by the drivers list
 void dispose_travels(const list_t travels);
 
-// Updates the driver
-void update_travel(const char *filepath, struct travel *trv);
-
-
-struct travel *get_travel(list_t travels, const int id);
 
 
 #endif // TRAVELS_H_

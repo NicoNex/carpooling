@@ -11,10 +11,24 @@
 #include "include/filehandler.h"
 
 
-list_t load_drivers(const char *filepath) {
+void refresh_driver_ids(list_t node) {
+	static int counter = 1;
+
+	if (node == NULL) {
+		counter = 1;
+		return;
+	}
+
+	struct driver *tmp = node->ptr;
+	tmp->id = counter++;
+	refresh_driver_ids(node->next);
+}
+
+
+list_t load_drivers() {
 	list_t drivers_list = NULL;
 	int drivers_num;
-	struct json_object *json = load_json_from_file(filepath);
+	struct json_object *json = load_json_from_file(DRIVERS_FILE);
 	struct json_object *drivers_json;
 
 	json_object_object_get_ex(json, "drivers", &drivers_json);
@@ -62,8 +76,8 @@ struct driver *get_driver(list_t node, const int id) {
 }
 
 
-void update_driver(const char *filepath, struct driver *drv) {
-	struct json_object *json = load_json_from_file(filepath);
+void update_driver(struct driver *drv) {
+	struct json_object *json = load_json_from_file(DRIVERS_FILE);
 	struct json_object *drivers_json;
 	int drivers_num;
 
@@ -88,10 +102,64 @@ void update_driver(const char *filepath, struct driver *drv) {
 	// write the json to the file
 	char *text = json_object_to_json_string(json);
 	FILE *fp;
-	fp = fopen(filepath, "w");
+	fp = fopen(DRIVERS_FILE, "w");
 	fwrite(text, 1, strlen(text), fp);
 	fclose(fp);
 	free(text);
+}
+
+
+void update_drivers_file(list_t lst) {
+	struct json_object  *main,
+						*array,
+						*driver,
+						*id,
+						*name,
+						*age,
+						*vehicle,
+						*seats,
+						*rating;
+
+	main = json_object_new_object();
+	array = json_object_new_array();
+
+	for (list_t tmp = lst; tmp != NULL; tmp = next(tmp)) {
+		struct driver *drv = tmp->ptr;
+
+		driver = json_object_new_object();
+		id = json_object_new_int(drv->id);
+		name = json_object_new_string(drv->name);
+		age = json_object_new_int(drv->age);
+		vehicle = json_object_new_string(drv->vehicle);
+		seats = json_object_new_int(drv->seats);
+		rating = json_object_new_int(drv->rating);
+
+		json_object_object_add(driver, "id", id);
+		json_object_object_add(driver, "name", name);
+		json_object_object_add(driver, "age", age);
+		json_object_object_add(driver, "vehicle", vehicle);
+		json_object_object_add(driver, "seats", seats);
+		json_object_object_add(driver, "rating", rating);
+
+		json_object_array_add(array, driver);
+	}
+
+	json_object_object_add(main, "drivers", array);
+
+	FILE *fp;
+	char *text = json_object_to_json_string(main);
+	fp = fopen(DRIVERS_FILE, "w");
+	fwrite(text, 1, strlen(text), fp);
+	fclose(fp);
+	free(text);
+}
+
+
+list_t add_driver(list_t drivers, struct driver *drv) {
+	list_t first = list_add(drivers, drv);
+	refresh_driver_ids(first);
+	update_drivers_file(first);
+	return first;
 }
 
 
