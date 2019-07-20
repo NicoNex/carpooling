@@ -109,7 +109,7 @@ void update_driver(struct driver *drv) {
 }
 
 
-void update_drivers_file(list_t lst) {
+static void update_drivers_file(list_t lst) {
 	struct json_object  *main,
 						*array,
 						*driver,
