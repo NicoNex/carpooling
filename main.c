@@ -37,7 +37,7 @@ struct bot {
 	struct driver *drvtmp;
 };
 
-
+// volatile for better thread syncronization
 volatile list_t drivers;
 volatile list_t travels;
 
@@ -97,10 +97,10 @@ void *update_bot(void *vargp) {
 		const char *text = json_object_get_string(textobj);
 		const char *username = json_object_get_string(usrobj);
 
-		// we need to check for "/dismiss" in any case
+		// we need to check for "/annulla" in any case
 		if (!strcmp(text, "/annulla")) {
 			bot->mode = DEFAULT;
-			tg_send_message("Action dismissed", bot->chat_id);
+			tg_send_message("Azione annullata", bot->chat_id);
 			return NULL;
 		}
 
@@ -168,7 +168,7 @@ void *update_bot(void *vargp) {
 		case RATE: {
 			int rating = strtol(text, NULL, 10);
 
-			if (rating < 1 || rating > 11) {
+			if (rating < 1 || rating > 10) {
 				char msg[512];
 				snprintf(msg, 512, "Valutazione incorretta.%%0AScrivi la valutazione da dare a %s, da 1 a 10", bot->drvtmp->name);
 				tg_send_message(msg, bot->chat_id);
@@ -273,6 +273,11 @@ void *update_bot(void *vargp) {
 
 		case DEL_DRIVER:{
 			int id = strtol(text, NULL, 10);
+			if (!get_driver(drivers, id)) {
+				tg_send_message("ID non valido%%0AInviami un ID valido", bot->chat_id);
+				break;
+			}
+
 			drivers = del_driver(drivers, id);
 			tg_send_message("Guidatore cancellato", bot->chat_id);
 			bot->mode = DEFAULT;
