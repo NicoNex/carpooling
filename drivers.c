@@ -163,6 +163,36 @@ list_t add_driver(list_t drivers, struct driver *drv) {
 }
 
 
+list_t del_driver(list_t node, const int id) {
+	if (node == NULL)
+		return NULL;
+
+	list_t first = node;
+	list_t prev = NULL;
+
+	for (list_t tmp = node; tmp != NULL; tmp = next(tmp)) {
+		struct driver *drv = tmp->ptr;
+
+		if (drv->id == id) {
+			if (prev)
+				prev->next = tmp->next;
+			else
+				first = tmp->next;
+
+			free(drv);
+			free(tmp);
+			break;
+		}
+
+		prev = tmp;
+	}
+
+	refresh_driver_ids(first);
+	update_drivers_file(first);
+	return first;
+}
+
+
 // TODO: maybe make this recursive
 void dispose_drivers(const list_t lst) {
 	for (list_t tmp = lst; tmp != NULL; tmp = next(tmp))

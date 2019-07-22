@@ -25,7 +25,8 @@ enum modes {
 	ADD_VEHICLE,
 	ADD_SEATS,
 	CONFIRM_ADD,
-	CONFIRM_UPD
+	CONFIRM_UPD,
+	DEL_DRIVER
 };
 
 
@@ -103,8 +104,8 @@ void *update_bot(void *vargp) {
 			return NULL;
 		}
 
-		// evaluates whether in DEFAULT mode in other to skip evaluation of otherwhise useless commands
-		if (bot->mode == DEFAULT) {
+		switch (bot->mode) {
+		case DEFAULT:
 			if (!strcmp(text, "/ping"))
 				tg_send_message("Hey!", bot->chat_id);
 
@@ -131,148 +132,176 @@ void *update_bot(void *vargp) {
 				bot->next_mode = ADD_NAME;
 				tg_send_message("Scrivimi l'ID del guidatore che vuoi modificare", bot->chat_id);
 			}
-		}
 
-		else {
-			switch (bot->mode) {
-			case SELECT_DRIVER: {
-				int id = strtol(text, NULL, 10);
-				bot->drvtmp = get_driver(drivers, id);
+			else if (!strcmp(text, "/canc_guidatore")) {
+				bot->mode = DEL_DRIVER;
+				tg_send_message("Scrivimi l'ID del guidatore che vuoi cancellare", bot->chat_id);
+			}
+			break;
 
-				if (bot->drvtmp == NULL) {
-					tg_send_message("ID incorretto.%0AScrivi solo il numero dell'ID del guidatore da valutare", bot->chat_id);
-					break;
-				}
+		case SELECT_DRIVER: {
+			int id = strtol(text, NULL, 10);
+			bot->drvtmp = get_driver(drivers, id);
 
-				char msg[512] = {'\0'};
-
-				switch (bot->next_mode) {
-				case RATE:
-					snprintf(msg, 512, "Scrivi la valutazione da dare a %s, da 1 a 10", bot->drvtmp->name);
-					break;
-
-				case ADD_NAME:
-					snprintf(msg, 512, "Scrivi il nuovo nome di %s", bot->drvtmp->name);
-					break;
-				}
-
-				tg_send_message(msg, bot->chat_id);
-				bot->mode = bot->next_mode;
+			if (bot->drvtmp == NULL) {
+				tg_send_message("ID incorretto.%0AScrivi solo il numero dell'ID del guidatore da valutare", bot->chat_id);
 				break;
 			}
 
-			case RATE: {
-				int rating = strtol(text, NULL, 10);
+			char msg[512] = {'\0'};
 
-				if (rating < 1 || rating > 11) {
-					char msg[512];
-					snprintf(msg, 512, "Valutazione incorretta.%%0AScrivi la valutazione da dare a %s, da 1 a 10", bot->drvtmp->name);
-					tg_send_message(msg, bot->chat_id);
-					break;
-				}
-
-				bot->drvtmp->rating = rating;
-				update_driver(bot->drvtmp);
-				bot->drvtmp = NULL;
-				bot->mode = DEFAULT;
-				tg_send_message("Grazie per il tuo feedback!", bot->chat_id);
+			switch (bot->next_mode) {
+			case RATE:
+				snprintf(msg, 512, "Scrivi la valutazione da dare a %s, da 1 a 10", bot->drvtmp->name);
 				break;
-			}
 
 			case ADD_NAME:
-				bot->drvtmp->name = text;
-				bot->mode = ADD_AGE;
-				tg_send_message("Grazie, adesso inviami l'età del guidatore scrivendo solo il numero degli anni", bot->chat_id);
-				break;
-
-			case ADD_AGE: {
-				char msg[512];
-				int age = strtol(text, NULL, 10);
-
-				if (!age) {
-					snprintf(msg, 512, "Età incorretta.%%0AScrivi l'età di %s mandando solo il numero degli anni", bot->drvtmp->name);
-					tg_send_message(msg, bot->chat_id);
-					break;
-				}
-
-				bot->drvtmp->age = age;
-				bot->mode = ADD_VEHICLE;
-				snprintf(msg, 512, "Grazie, adesso inviami il tipo di veicolo guidato da %s", bot->drvtmp->name);
-				tg_send_message(msg, bot->chat_id);
+				snprintf(msg, 512, "Scrivi il nuovo nome di %s", bot->drvtmp->name);
 				break;
 			}
 
-			case ADD_VEHICLE:
-				bot->drvtmp->vehicle = text;
-				bot->mode = ADD_SEATS;
-				tg_send_message("Grazie, inviami il numero di posti dispobibili", bot->chat_id);
-				break;
-
-
-			case ADD_SEATS: {
-				char msg[512];
-				int seats = strtol(text, NULL, 10);
-
-				if (seats < 1) {
-					snprintf(msg, 512, "Numero posti non valido, immetti il numero di posti disponibili per %s", bot->drvtmp->name);
-					break;
-				}
-
-				bot->drvtmp->seats = seats;
-				bot->mode = CONFIRM_ADD;
-				snprintf(msg, 512, "Nome: %s%%0AEtà: %d%%0AVeicolo: %s%%0APosti: %d", bot->drvtmp->name, bot->drvtmp->age, bot->drvtmp->vehicle, bot->drvtmp->seats);
-				tg_send_message(msg, bot->chat_id);
-				tg_send_message("Confermi? [S/N]", bot->chat_id);
-				break;
-			}
-
-
-			case CONFIRM_ADD: {
-				char response = tolower(text[0]);
-
-				if (response == 's') {
-					drivers = add_driver(drivers, bot->drvtmp);
-					bot->mode = DEFAULT;
-					send_drivers(bot->chat_id);
-				}
-
-				else if (response == 'n') {
-					tg_send_message("Inserimento annullato", bot->chat_id);
-					bot->mode = DEFAULT;
-				}
-
-				else
-					tg_send_message("Risposta non valida, scrivi 's' per confermare o 'n' per annullare", bot->chat_id);
-
-				break;
-			}
-
-			case CONFIRM_UPD: {
-				char response = tolower(text[0]);
-
-				if (response == 's') {
-					update_driver(bot->drvtmp);
-					bot->mode = DEFAULT;
-					send_drivers(bot->chat_id);
-				}
-
-				else if (response == 'n') {
-					tg_send_message("Inserimento annullato", bot->chat_id);
-					bot->mode = DEFAULT;
-				}
-
-				else
-					tg_send_message("Risposta non valida, scrivi 's' per confermare o 'n' per annullare", bot->chat_id);
-
-				break;
-			}}
+			tg_send_message(msg, bot->chat_id);
+			bot->mode = bot->next_mode;
+			break;
 		}
+
+		case RATE: {
+			int rating = strtol(text, NULL, 10);
+
+			if (rating < 1 || rating > 11) {
+				char msg[512];
+				snprintf(msg, 512, "Valutazione incorretta.%%0AScrivi la valutazione da dare a %s, da 1 a 10", bot->drvtmp->name);
+				tg_send_message(msg, bot->chat_id);
+				break;
+			}
+
+			bot->drvtmp->rating = rating;
+			update_driver(bot->drvtmp);
+			bot->drvtmp = NULL;
+			bot->mode = DEFAULT;
+			tg_send_message("Grazie per il tuo feedback!", bot->chat_id);
+			break;
+		}
+
+		case ADD_NAME:
+			bot->drvtmp->name = text;
+			bot->mode = ADD_AGE;
+			tg_send_message("Inviami l'età del guidatore scrivendo solo il numero degli anni", bot->chat_id);
+			break;
+
+		case ADD_AGE: {
+			char msg[512];
+			int age = strtol(text, NULL, 10);
+
+			if (!age) {
+				snprintf(msg, 512, "Età incorretta.%%0AScrivi l'età di %s mandando solo il numero degli anni", bot->drvtmp->name);
+				tg_send_message(msg, bot->chat_id);
+				break;
+			}
+
+			bot->drvtmp->age = age;
+			bot->mode = ADD_VEHICLE;
+			snprintf(msg, 512, "Inviami il tipo di veicolo guidato da %s", bot->drvtmp->name);
+			tg_send_message(msg, bot->chat_id);
+			break;
+		}
+
+		case ADD_VEHICLE:
+			bot->drvtmp->vehicle = text;
+			bot->mode = ADD_SEATS;
+			tg_send_message("Inviami il numero di posti dispobibili", bot->chat_id);
+			break;
+
+
+		case ADD_SEATS: {
+			char msg[512];
+			int seats = strtol(text, NULL, 10);
+
+			if (seats < 1) {
+				snprintf(msg, 512, "Numero posti non valido, immetti il numero di posti disponibili per %s", bot->drvtmp->name);
+				break;
+			}
+
+			bot->drvtmp->seats = seats;
+			bot->mode = CONFIRM_ADD;
+			snprintf(msg, 512, "Nome: %s%%0AEtà: %d%%0AVeicolo: %s%%0APosti: %d", bot->drvtmp->name, bot->drvtmp->age, bot->drvtmp->vehicle, bot->drvtmp->seats);
+			tg_send_message(msg, bot->chat_id);
+			tg_send_message("Confermi? [S/N]", bot->chat_id);
+			break;
+		}
+
+
+		case CONFIRM_ADD: {
+			char response = tolower(text[0]);
+
+			if (response == 's') {
+				drivers = add_driver(drivers, bot->drvtmp);
+				bot->mode = DEFAULT;
+				send_drivers(bot->chat_id);
+			}
+
+			else if (response == 'n') {
+				tg_send_message("Inserimento annullato", bot->chat_id);
+				bot->mode = DEFAULT;
+			}
+
+			else
+				tg_send_message("Risposta non valida, scrivi 's' per confermare o 'n' per annullare", bot->chat_id);
+
+			break;
+		}
+
+		case CONFIRM_UPD: {
+			char response = tolower(text[0]);
+
+			if (response == 's') {
+				update_driver(bot->drvtmp);
+				bot->mode = DEFAULT;
+				send_drivers(bot->chat_id);
+			}
+
+			else if (response == 'n') {
+				tg_send_message("Inserimento annullato", bot->chat_id);
+				bot->mode = DEFAULT;
+			}
+
+			else
+				tg_send_message("Risposta non valida, scrivi 's' per confermare o 'n' per annullare", bot->chat_id);
+
+			break;
+		}
+
+		case DEL_DRIVER:{
+			int id = strtol(text, NULL, 10);
+			drivers = del_driver(drivers, id);
+			tg_send_message("Guidatore cancellato", bot->chat_id);
+			bot->mode = DEFAULT;
+			break;
+		}}
 	}
 }
 
 
 int main(void) {
+	FILE *fp = fopen("TOKEN", "rb");
+
+	if (fp == NULL) {
+		fputs("Impossible to open file TOKEN", stderr);
+		return 1;
+	}
+
+	fseek(fp, 0, SEEK_END);
+	long fsize = ftell(fp);
+	rewind(fp);
+
+	char token[fsize+1];
+	memset(token, 0, fsize+1);
+	fread(token, 1, fsize+1, fp);
+	fclose(fp);
+
 	drivers = load_drivers();
 	travels = load_travels("res/travels.json");
-	run_dispatcher("921731218:AAHG29_KgVw-nsEweUmCMTh7fS71u0W6gmw");
+	run_dispatcher(token);
+
+	return 0;
 }

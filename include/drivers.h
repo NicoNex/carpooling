@@ -37,6 +37,9 @@ void update_driver(struct driver *drv);
 // Used to add a new driver to the list
 list_t add_driver(list_t drivers, struct driver *drv);
 
+
+list_t del_driver(list_t drivers, const int id);
+
 struct driver *get_driver(list_t drivers, const int id);
 
 
