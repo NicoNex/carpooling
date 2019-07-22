@@ -286,7 +286,7 @@ int main(void) {
 	FILE *fp = fopen("TOKEN", "rb");
 
 	if (fp == NULL) {
-		fputs("Impossible to open file TOKEN", stderr);
+		fputs("Unable to open file TOKEN", stderr);
 		return 1;
 	}
 
@@ -300,7 +300,7 @@ int main(void) {
 	fclose(fp);
 
 	drivers = load_drivers();
-	travels = load_travels("res/travels.json");
+	travels = load_travels();
 	run_dispatcher(token);
 
 	return 0;

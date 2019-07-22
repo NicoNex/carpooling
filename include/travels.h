@@ -11,19 +11,23 @@
 #include "list.h"
 
 
+#define TRAVELS_FILE "res/travels.json"
+
+
 struct travel {
 	int id;
+	char *date;
 	int driver_id;
 	int64_t unix_time;
 	char *destination;
-	char *date;
+	char *driver_name;
 };
 
 // Loads the drivers list from disk from a json file.
-list_t load_travels(const char *filepath);
+list_t load_travels();
 
 // Updates the driver on the file
-void update_travel(const char *filepath, struct travel *trv);
+void update_travel(struct travel *trv);
 
 // returns the travel pointer in a list with the corresponding id
 struct travel *get_travel(list_t travels, const int id);

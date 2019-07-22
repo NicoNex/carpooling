@@ -10,10 +10,10 @@
 #include "include/filehandler.h"
 
 
-list_t load_travels(const char *filepath) {
+list_t load_travels() {
 	list_t travels_list = NULL;
 	int travels_num;
-	struct json_object *json = load_json_from_file(filepath);
+	struct json_object *json = load_json_from_file(TRAVELS_FILE);
 	struct json_object *travels_json;
 
 	json_object_object_get_ex(json, "travels", &travels_json);
