@@ -4,7 +4,10 @@
  */
 
 
+#include <stdio.h>
 #include <stdint.h>
+#include <string.h>
+
 #include "include/list.h"
 #include "include/travels.h"
 #include "include/filehandler.h"
@@ -42,6 +45,72 @@ list_t load_travels() {
 	}
 
 	return travels_list;
+}
+
+
+static void refresh_travel_ids(list_t node) {
+	static int counter;
+
+	if (node == NULL) {
+		counter = 1;
+		return;
+	}
+
+	struct travel *tmp = node->ptr;
+	tmp->id = counter++;
+	refresh_travel_ids(node->next);
+}
+
+
+void update_travels_file(list_t lst) {
+	struct json_object  *id,
+						*date,
+						*main,
+						*array,
+						*travel,
+						*driver_name,
+						*destination;
+
+	main = json_object_new_object();
+	array = json_object_new_array();
+
+	for (list_t tmp = lst; tmp; tmp = next(tmp)) {
+		struct travel *trv = get_object(tmp);
+
+		travel = json_object_new_object();
+		id = json_object_new_int(trv->id);
+		puts("1");
+		date = json_object_new_string(trv->date);
+		puts("2");
+		driver_name = json_object_new_string(trv->driver_name);
+		puts("3");
+		destination = json_object_new_string(trv->destination);
+
+		json_object_object_add(travel, "id", id);
+		json_object_object_add(travel, "date", date);
+		json_object_object_add(travel, "driver_name", driver_name);
+		json_object_object_add(travel, "destination", destination);
+
+		json_object_array_add(array, travel);
+
+		// json_object_put(travel);
+		// json_object_put(id);
+		// json_object_put(date);
+		// json_object_put(driver_name);
+		// json_object_put(destination);
+
+	}
+
+	json_object_object_add(main, "travels", array);
+	// json_object_put(array);
+
+	FILE *fp = fopen(TRAVELS_FILE, "w");
+	char *text = json_object_to_json_string(main);
+	puts(text); // DEBUG
+	json_object_put(main);
+	// fwrite(text, 1, strlen(text), fp);
+	fclose(fp);
+	free(text);
 }
 
 

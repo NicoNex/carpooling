@@ -11,7 +11,7 @@
 #include "include/filehandler.h"
 
 
-void refresh_driver_ids(list_t node) {
+static void refresh_driver_ids(list_t node) {
 	static int counter = 1;
 
 	if (node == NULL) {
@@ -75,7 +75,7 @@ struct driver *get_driver(list_t node, const int id) {
 
 }
 
-
+// TODO: deprecate this
 void update_driver(struct driver *drv) {
 	struct json_object *json = load_json_from_file(DRIVERS_FILE);
 	struct json_object *drivers_json;
@@ -106,6 +106,7 @@ void update_driver(struct driver *drv) {
 	fwrite(text, 1, strlen(text), fp);
 	fclose(fp);
 	free(text);
+	json_object_put(json);
 }
 
 
@@ -123,8 +124,8 @@ static void update_drivers_file(list_t lst) {
 	main = json_object_new_object();
 	array = json_object_new_array();
 
-	for (list_t tmp = lst; tmp != NULL; tmp = next(tmp)) {
-		struct driver *drv = tmp->ptr;
+	for (list_t tmp = lst; tmp; tmp = next(tmp)) {
+		struct driver *drv = get_object(tmp);
 
 		driver = json_object_new_object();
 		id = json_object_new_int(drv->id);
@@ -142,13 +143,22 @@ static void update_drivers_file(list_t lst) {
 		json_object_object_add(driver, "rating", rating);
 
 		json_object_array_add(array, driver);
+
+		// json_object_put(driver);
+		// json_object_put(id);
+		// json_object_put(name);
+		// json_object_put(seats);
+		// json_object_put(age);
+		// json_object_put(vehicle);
+		// json_object_put(rating);
 	}
 
 	json_object_object_add(main, "drivers", array);
+	// json_object_put(array);
 
-	FILE *fp;
+	FILE *fp = fopen(DRIVERS_FILE, "w");
 	char *text = json_object_to_json_string(main);
-	fp = fopen(DRIVERS_FILE, "w");
+	// json_object_put(main);
 	fwrite(text, 1, strlen(text), fp);
 	fclose(fp);
 	free(text);

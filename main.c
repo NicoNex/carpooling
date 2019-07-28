@@ -82,11 +82,10 @@ void send_travels(int64_t chat_id) {
 }
 
 
-void *update_bot(void *vargp) {
-	struct bot_update_arg *arg = vargp;
-	struct bot *bot = arg->bot_ptr;
-	struct json_object *update = arg->update;
+void *update_bot(struct bot *bot, struct json_object *update) {
 	struct json_object *messageobj, *fromobj, *usrobj, *textobj;
+
+	printf("%lu\n", bot);
 
 	if (json_object_object_get_ex(update, "message", &messageobj)
 			&& json_object_object_get_ex(messageobj, "from", &fromobj)
@@ -108,6 +107,10 @@ void *update_bot(void *vargp) {
 		case DEFAULT:
 			if (!strcmp(text, "/ping"))
 				tg_send_message("Hey!", bot->chat_id);
+
+			// DEBUG
+			else if (!strcmp(text, "/utf"))
+				update_travels_file(travels);
 
 			else if (!strcmp(text, "/guidatori"))
 				send_drivers(bot->chat_id);

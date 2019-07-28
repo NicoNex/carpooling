@@ -17,23 +17,23 @@
 struct travel {
 	int id;
 	char *date;
-	int driver_id;
+	int driver_id; // deprecated
 	int64_t unix_time;
 	char *destination;
 	char *driver_name;
 };
 
-// Loads the drivers list from disk from a json file.
+// Loads the travels list from disk from a json file.
 list_t load_travels();
 
-// Updates the driver on the file
-void update_travel(struct travel *trv);
+// Updates the travels file
+void update_travels_file(list_t travels);
 
 // returns the travel pointer in a list with the corresponding id
 struct travel *get_travel(list_t travels, const int id);
 
 
-// Frees the memory occupied by the drivers list
+// Frees the memory occupied by the travels list
 void dispose_travels(const list_t travels);
 
 
