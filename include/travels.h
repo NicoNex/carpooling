@@ -7,6 +7,7 @@
 #define TRAVELS_H_
 
 
+#include <time.h>
 #include <stdint.h>
 #include "list.h"
 
@@ -18,7 +19,7 @@ struct travel {
 	int id;
 	char *date;
 	int driver_id; // deprecated
-	int64_t unix_time;
+	time_t epoch;
 	char *destination;
 	char *driver_name;
 };
@@ -26,11 +27,13 @@ struct travel {
 // Loads the travels list from disk from a json file.
 list_t load_travels();
 
-// Updates the travels file
-void update_travels_file(list_t travels);
 
 // returns the travel pointer in a list with the corresponding id
 struct travel *get_travel(list_t travels, const int id);
+
+
+// adds a travel to the travels list
+list_t add_travel(list_t travels, struct travel *travel);
 
 
 // Frees the memory occupied by the travels list

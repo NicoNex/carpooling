@@ -1,5 +1,5 @@
 CC=gcc
-LIBS=`curl-config --libs` `pkg-config --libs json-c` -lpthread
+LIBS=`curl-config --libs` `pkg-config --libs json-c`
 CFLAGS=-march=native -O2 `pkg-config --cflags json-c` -std=gnu17 -Wno-discarded-qualifiers -fopenmp
 
 all:

@@ -62,7 +62,7 @@ static void refresh_travel_ids(list_t node) {
 }
 
 
-void update_travels_file(list_t lst) {
+static void update_travels_file(list_t lst) {
 	struct json_object  *id,
 						*date,
 						*main,
@@ -79,11 +79,8 @@ void update_travels_file(list_t lst) {
 
 		travel = json_object_new_object();
 		id = json_object_new_int(trv->id);
-		puts("1");
 		date = json_object_new_string(trv->date);
-		puts("2");
 		driver_name = json_object_new_string(trv->driver_name);
-		puts("3");
 		destination = json_object_new_string(trv->destination);
 
 		json_object_object_add(travel, "id", id);
@@ -92,25 +89,52 @@ void update_travels_file(list_t lst) {
 		json_object_object_add(travel, "destination", destination);
 
 		json_object_array_add(array, travel);
-
-		// json_object_put(travel);
-		// json_object_put(id);
-		// json_object_put(date);
-		// json_object_put(driver_name);
-		// json_object_put(destination);
-
 	}
 
 	json_object_object_add(main, "travels", array);
-	// json_object_put(array);
 
 	FILE *fp = fopen(TRAVELS_FILE, "w");
-	char *text = json_object_to_json_string(main);
+	char *text = json_object_to_json_string_ext(main, JSON_C_TO_STRING_PRETTY);
 	puts(text); // DEBUG
-	json_object_put(main);
-	// fwrite(text, 1, strlen(text), fp);
+	fwrite(text, 1, strlen(text), fp);
 	fclose(fp);
-	free(text);
+	json_object_put(main);
+}
+
+
+list_t add_travel(list_t travels, struct travel *trv) {
+	list_t first = list_add(travels, trv);
+	refresh_travel_ids(first);
+	update_travels_file(first);
+	return first;
+}
+
+
+list_t del_travel(list_t node, const int id) {
+	if (node == NULL)
+		return NULL;
+
+	list_t first = node;
+	list_t prev = NULL;
+
+	for (list_t tmp = node; node; node = next(node)) {
+		struct travel *trv = get_object(node);
+
+		if (trv->id == id) {
+			if (prev)
+				prev->next = tmp->next;
+			else
+				first = tmp->next;
+
+			free(trv);
+			free(tmp);
+			break;
+		}
+	}
+
+	refresh_travel_ids(first);
+	update_travels_file(first);
+	return first;
 }
 
 

@@ -143,25 +143,16 @@ static void update_drivers_file(list_t lst) {
 		json_object_object_add(driver, "rating", rating);
 
 		json_object_array_add(array, driver);
-
-		// json_object_put(driver);
-		// json_object_put(id);
-		// json_object_put(name);
-		// json_object_put(seats);
-		// json_object_put(age);
-		// json_object_put(vehicle);
-		// json_object_put(rating);
 	}
 
 	json_object_object_add(main, "drivers", array);
-	// json_object_put(array);
 
 	FILE *fp = fopen(DRIVERS_FILE, "w");
-	char *text = json_object_to_json_string(main);
-	// json_object_put(main);
+	char *text = json_object_to_json_string_ext(main, JSON_C_TO_STRING_PRETTY);
+	puts(text);
 	fwrite(text, 1, strlen(text), fp);
 	fclose(fp);
-	free(text);
+	json_object_put(main);
 }
 
 
@@ -180,7 +171,7 @@ list_t del_driver(list_t node, const int id) {
 	list_t first = node;
 	list_t prev = NULL;
 
-	for (list_t tmp = node; tmp != NULL; tmp = next(tmp)) {
+	for (list_t tmp = node; tmp; tmp = next(tmp)) {
 		struct driver *drv = tmp->ptr;
 
 		if (drv->id == id) {
