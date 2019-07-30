@@ -23,11 +23,11 @@ list_t load_travels() {
 	travels_num = json_object_array_length(travels_json);
 
 	for (int i = 0; i < travels_num; i++) {
-		struct json_object *travel_obj, *driver_id, *destination, *date, *id;
+		struct json_object *travel_obj, *driver_name, *destination, *date, *id;
 
 		travel_obj = json_object_array_get_idx(travels_json, i);
 
-		if (!(json_object_object_get_ex(travel_obj, "driver_id", &driver_id)
+		if (!(json_object_object_get_ex(travel_obj, "driver_name", &driver_name)
 				&& json_object_object_get_ex(travel_obj, "destination", &destination)
 				&& json_object_object_get_ex(travel_obj, "id", &id)
 				&& json_object_object_get_ex(travel_obj, "date", &date))) {
@@ -38,7 +38,7 @@ list_t load_travels() {
 
 		trv->id = json_object_get_int(id);
 		trv->date = json_object_get_string(date);
-		trv->driver_id = json_object_get_int(driver_id);
+		trv->driver_name = json_object_get_string(driver_name);
 		trv->destination = json_object_get_string(destination);
 
 		travels_list = list_add(travels_list, trv);
@@ -95,7 +95,6 @@ static void update_travels_file(list_t lst) {
 
 	FILE *fp = fopen(TRAVELS_FILE, "w");
 	char *text = json_object_to_json_string_ext(main, JSON_C_TO_STRING_PRETTY);
-	puts(text); // DEBUG
 	fwrite(text, 1, strlen(text), fp);
 	fclose(fp);
 	json_object_put(main);

@@ -60,23 +60,6 @@ struct bot *new_bot(int64_t chat_id) {
 }
 
 
-// time_t parse_time(const char *str) {
-// 	// const int strlen = 10;
-// 	int year, month, day;
-// 	struct tm tm;
-
-// 	sscanf(str, "%d-%d-%d", &day, &month, &year);
-
-// 	if (month < 1 || month > 11)
-// 		return 0;
-
-// 	if (day < 1 || day > 31)
-// 		return 0;
-
-// 	if ()
-// }
-
-
 void send_drivers(int64_t chat_id) {
 	for (list_t tmp = drivers; tmp != NULL; tmp = next(tmp)) {
 		struct driver *drv = get_object(tmp);
@@ -92,15 +75,9 @@ void send_drivers(int64_t chat_id) {
 void send_travels(int64_t chat_id) {
 	for (list_t tmp = travels; tmp != NULL; tmp = next(tmp)) {
 		struct travel *trv = get_object(tmp);
-		struct driver *drv = get_driver(drivers, trv->driver_id);
-		char *nametmp;
-		char msg[512];
+		char msg[511];
 
-		// let's avoid SEGFAULT like a pro
-		if (trv == NULL) continue;
-		(drv) ? (nametmp = drv->name) : (nametmp = "N/A");
-
-		snprintf(msg, 512, "ID: %d%%0ADestinazione: %s%%0AData: %s%%0AGuidatore: %s%%0A%%0A", trv->id, trv->destination, trv->date, nametmp);
+		snprintf(msg, 511, "ID: %d%%0ADestinazione: %s%%0AData: %s%%0AGuidatore: %s%%0A%%0A", trv->id, trv->destination, trv->date, trv->driver_name);
 		tg_send_message(msg, chat_id);
 	}
 }
