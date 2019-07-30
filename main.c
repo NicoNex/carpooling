@@ -9,10 +9,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#if (defined(_WIN32) || defined(_WIN64))
-#include <_alloca.h>
-#endif
-
 #include "utron/bot.h"
 #include "utron/engine.h"
 #include "utron/dispatcher.h"
