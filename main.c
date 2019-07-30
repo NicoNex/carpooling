@@ -9,6 +9,10 @@
 #include <stdio.h>
 #include <string.h>
 
+#if (defined(_WIN32) || defined(_WIN64))
+#include <_alloca.h>
+#endif
+
 #include "utron/bot.h"
 #include "utron/engine.h"
 #include "utron/dispatcher.h"
@@ -58,6 +62,23 @@ struct bot *new_bot(int64_t chat_id) {
 
 	return bot;
 }
+
+
+// time_t parse_time(const char *str) {
+// 	// const int strlen = 10;
+// 	int year, month, day;
+// 	struct tm tm;
+
+// 	sscanf(str, "%d-%d-%d", &day, &month, &year);
+
+// 	if (month < 1 || month > 11)
+// 		return 0;
+
+// 	if (day < 1 || day > 31)
+// 		return 0;
+
+// 	if ()
+// }
 
 
 void send_drivers(int64_t chat_id) {
@@ -307,17 +328,21 @@ void *update_bot(struct bot *bot, struct json_object *update) {
 				time_t epoch;
 				struct tm tm;
 
-				// TODO: this line is buggy, fix it
+				memset(&tm, 0, sizeof(struct tm));
 				strptime(text, "%d-%m-%Y", &tm);
 				epoch = mktime(&tm);
-				printf("%d %d %d\n", tm.tm_year, tm.tm_mon, tm.tm_mday);
 
 				if (epoch < time(NULL)) {
-					tg_send_message("Non puoi settare una data nel passato", bot->chat_id);
+					tg_send_message("Non puoi settare una data nel passato, inviami una data corretta", bot->chat_id);
 					break;
 				}
 
-				bot->trvtmp->date = text;
+				char buf[31];
+				strftime(buf, sizeof(buf), "%d-%m-%Y", &tm);
+				size_t buflen = strlen(buf) + 1;
+
+				bot->trvtmp->date = malloc(buflen);
+				memcpy(bot->trvtmp->date, buf, buflen);
 				bot->mode = ADD_DRIVER_ID;
 				send_drivers(bot->chat_id);
 				tg_send_message("Inviami l'ID del guidatore collegato al viaggio", bot->chat_id);
@@ -332,13 +357,13 @@ void *update_bot(struct bot *bot, struct json_object *update) {
 					break;
 				}
 
-				int nlen = strlen(tmp->name);
+				int nlen = strlen(tmp->name) + 1;
 				bot->trvtmp->driver_name = malloc(nlen);
 				strncpy(bot->trvtmp->driver_name, tmp->name, nlen);
 				bot->mode = CONFIRM_ADD_TRV;
 
-				char msg[512];
-				snprintf(msg, 512, "Destinazione: %s%%0AData: %d%%0AGuidatore: %s", bot->trvtmp->destination, bot->trvtmp->date, bot->trvtmp->driver_name);
+				char msg[511];
+				snprintf(msg, 511, "Destinazione: %s%%0AData: %s%%0AGuidatore: %s", bot->trvtmp->destination, bot->trvtmp->date, bot->trvtmp->driver_name);
 				tg_send_message(msg, bot->chat_id);
 				tg_send_message("Confermi? [S/N]", bot->chat_id);
 				break;
