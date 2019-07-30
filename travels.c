@@ -62,7 +62,7 @@ static void refresh_travel_ids(list_t node) {
 }
 
 
-static void update_travels_file(list_t lst) {
+void update_travels_file(const list_t lst) {
 	struct json_object  *id,
 						*date,
 						*main,

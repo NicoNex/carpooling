@@ -110,7 +110,7 @@ void update_driver(struct driver *drv) {
 }
 
 
-static void update_drivers_file(list_t lst) {
+void update_drivers_file(list_t lst) {
 	struct json_object  *main,
 						*array,
 						*driver,
@@ -149,7 +149,6 @@ static void update_drivers_file(list_t lst) {
 
 	FILE *fp = fopen(DRIVERS_FILE, "w");
 	char *text = json_object_to_json_string_ext(main, JSON_C_TO_STRING_PRETTY);
-	puts(text);
 	fwrite(text, 1, strlen(text), fp);
 	fclose(fp);
 	json_object_put(main);

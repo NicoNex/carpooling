@@ -27,8 +27,8 @@ list_t load_drivers();
 // Frees the memory occupied by the drivers list
 void dispose_drivers(const list_t drivers);
 
-
-// void update_drivers_file(const list_t drivers);
+// Updates the file that stores the information regarding the drivers
+void update_drivers_file(const list_t drivers);
 
 // Updates the driver
 void update_driver(struct driver *drv);

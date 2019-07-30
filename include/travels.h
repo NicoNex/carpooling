@@ -35,6 +35,12 @@ struct travel *get_travel(list_t travels, const int id);
 // adds a travel to the travels list
 list_t add_travel(list_t travels, struct travel *travel);
 
+// deletes a travel from the travels list
+list_t del_travel(list_t travels, const int id);
+
+// Updates the file that stores the information regarding the travels
+void update_travels_file(const list_t travels);
+
 
 // Frees the memory occupied by the travels list
 void dispose_travels(const list_t travels);
