@@ -30,9 +30,6 @@ void dispose_drivers(const list_t drivers);
 // Updates the file that stores the information regarding the drivers
 void update_drivers_file(const list_t drivers);
 
-// Updates the driver
-void update_driver(struct driver *drv);
-
 
 // Used to add a new driver to the list
 list_t add_driver(list_t drivers, struct driver *drv);

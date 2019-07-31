@@ -75,40 +75,6 @@ struct driver *get_driver(list_t node, const int id) {
 
 }
 
-// TODO: deprecate this
-void update_driver(struct driver *drv) {
-	struct json_object *json = load_json_from_file(DRIVERS_FILE);
-	struct json_object *drivers_json;
-	int drivers_num;
-
-	json_object_object_get_ex(json, "drivers", &drivers_json);
-	drivers_num = json_object_array_length(drivers_json);
-	for (int i = 0; i < drivers_num; i++) {
-		struct json_object *driverobj, *id, *rating, *seats;
-
-		driverobj = json_object_array_get_idx(drivers_json, i);
-		json_object_object_get_ex(driverobj, "id", &id);
-
-		if (drv->id == json_object_get_int(id)) {
-			json_object_object_get_ex(driverobj, "rating", &rating);
-			json_object_object_get_ex(driverobj, "seats", &seats);
-
-			json_object_set_int(rating, drv->rating);
-			json_object_set_int(seats, drv->seats);
-			break;
-		}
-	}
-
-	// write the json to the file
-	char *text = json_object_to_json_string(json);
-	FILE *fp;
-	fp = fopen(DRIVERS_FILE, "w");
-	fwrite(text, 1, strlen(text), fp);
-	fclose(fp);
-	free(text);
-	json_object_put(json);
-}
-
 
 void update_drivers_file(list_t lst) {
 	struct json_object  *main,

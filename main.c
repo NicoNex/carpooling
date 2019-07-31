@@ -98,7 +98,7 @@ void *update_bot(struct bot *bot, struct json_object *update) {
 		const char *text = json_object_get_string(textobj);
 		const char *username = json_object_get_string(usrobj);
 
-		// TODO: make it free trvtmp and drvtmp
+		// TODO: make it free trvtmp and drvtmp otherwise it's hamarah
 		// we need to check for "/annulla" in any case
 		if (!strcmp(text, "/annulla")) {
 			bot->mode = DEFAULT;
@@ -198,18 +198,21 @@ void *update_bot(struct bot *bot, struct json_object *update) {
 				}
 
 				bot->drvtmp->rating = rating;
-				update_driver(bot->drvtmp);
+				update_drivers_file(drivers);
 				bot->drvtmp = NULL;
 				bot->mode = DEFAULT;
 				tg_send_message("Grazie per il tuo feedback!", bot->chat_id);
 				break;
 			}
 
-			case ADD_NAME:
-				bot->drvtmp->name = text;
+			case ADD_NAME: {
+				size_t len = strlen(text) + 1;
+				bot->drvtmp->name = malloc(len);
+				strncpy(bot->drvtmp->name, text, len);
 				bot->mode = ADD_AGE;
 				tg_send_message("Inviami l'età del guidatore scrivendo solo il numero degli anni", bot->chat_id);
 				break;
+			}
 
 			case ADD_AGE: {
 				char msg[512];
@@ -228,30 +231,32 @@ void *update_bot(struct bot *bot, struct json_object *update) {
 				break;
 			}
 
-			case ADD_VEHICLE:
-				bot->drvtmp->vehicle = text;
+			case ADD_VEHICLE: {
+				size_t len = strlen(text) + 1;
+				bot->drvtmp->vehicle = malloc(len);
+				strncpy(bot->drvtmp->vehicle, text, len);
 				bot->mode = ADD_SEATS;
 				tg_send_message("Inviami il numero di posti dispobibili", bot->chat_id);
 				break;
-
+			}
 
 			case ADD_SEATS: {
-				char msg[512];
+				char msg[511];
 				int seats = strtol(text, NULL, 10);
 
 				if (seats < 1) {
-					snprintf(msg, 512, "Numero posti non valido, immetti il numero di posti disponibili per %s", bot->drvtmp->name);
+					snprintf(msg, 511, "Numero posti non valido, immetti il numero di posti disponibili per %s", bot->drvtmp->name);
 					break;
 				}
 
 				bot->drvtmp->seats = seats;
 				bot->mode = CONFIRM_ADD_DRV;
-				snprintf(msg, 512, "Nome: %s%%0AEtà: %d%%0AVeicolo: %s%%0APosti: %d", bot->drvtmp->name, bot->drvtmp->age, bot->drvtmp->vehicle, bot->drvtmp->seats);
+				snprintf(msg, 511, "Nome: %s%%0AEtà: %d%%0AVeicolo: %s%%0APosti: %d", bot->drvtmp->name, bot->drvtmp->age, bot->drvtmp->vehicle, bot->drvtmp->seats);
+				puts(msg);
 				tg_send_message(msg, bot->chat_id);
 				tg_send_message("Confermi? [S/N]", bot->chat_id);
 				break;
 			}
-
 
 			case CONFIRM_ADD_DRV: {
 				char response = tolower(text[0]);
@@ -278,7 +283,6 @@ void *update_bot(struct bot *bot, struct json_object *update) {
 				char response = tolower(text[0]);
 
 				if (response == 's') {
-					// update_driver(bot->drvtmp);
 					update_drivers_file(drivers);
 					bot->mode = DEFAULT;
 					send_drivers(bot->chat_id);
