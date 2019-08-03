@@ -87,7 +87,7 @@ static void send_drivers(int64_t chat_id) {
 		struct driver *drv = get_object(tmp);
 		char msg[512];
 
-		snprintf(msg, 512, "ID: %d%%0ANome: %s%%0AEtà: %d%%0AVeicolo: %s%%0APosti: %d%%0AValutazione: %d%%0A%%0A", drv->id, drv->name, drv->age, drv->vehicle, drv->seats, drv->rating);
+		snprintf(msg, 512, "*ID*: %d%%0A*Nome*: %s%%0A*Età*: %d%%0A*Veicolo*: %s%%0A*Posti*: %d%%0A*Valutazione*: %d%%0A%%0A", drv->id, drv->name, drv->age, drv->vehicle, drv->seats, drv->rating);
 		tg_send_message(msg, chat_id);
 	}
 
@@ -99,7 +99,7 @@ static void send_travels(int64_t chat_id) {
 		struct travel *trv = get_object(tmp);
 		char msg[511];
 
-		snprintf(msg, 511, "ID: %d%%0ADestinazione: %s%%0AData: %s%%0AGuidatore: %s%%0A%%0A", trv->id, trv->destination, trv->date, trv->driver_name);
+		snprintf(msg, 511, "*ID*: %d%%0A*Destinazione*: %s%%0A*Data*: %s%%0A*Guidatore*: %s%%0A%%0A", trv->id, trv->destination, trv->date, trv->driver_name);
 		tg_send_message(msg, chat_id);
 	}
 }
@@ -285,7 +285,7 @@ void update_bot(struct bot *bot, struct json_object *update) {
 
 				bot->drvtmp->seats = seats;
 
-				snprintf(msg, 511, "Nome: %s%%0AEtà: %d%%0AVeicolo: %s%%0APosti: %d", bot->drvtmp->name, bot->drvtmp->age, bot->drvtmp->vehicle, bot->drvtmp->seats);
+				snprintf(msg, 511, "*Nome*: %s%%0A*Età*: %d%%0A*Veicolo*: %s%%0A*Posti*: %d", bot->drvtmp->name, bot->drvtmp->age, bot->drvtmp->vehicle, bot->drvtmp->seats);
 				tg_send_message(msg, bot->chat_id);
 				tg_send_message("Confermi? [S/N]", bot->chat_id);
 				bot->mode = CONFIRM;
@@ -381,7 +381,7 @@ void update_bot(struct bot *bot, struct json_object *update) {
 				strncpy(bot->trvtmp->driver_name, tmp->name, nlen);
 
 				char msg[511];
-				snprintf(msg, 511, "Destinazione: %s%%0AData: %s%%0AGuidatore: %s", bot->trvtmp->destination, bot->trvtmp->date, bot->trvtmp->driver_name);
+				snprintf(msg, 511, "*Destinazione*: %s%%0A*Data*: %s%%0A*Guidatore*: %s", bot->trvtmp->destination, bot->trvtmp->date, bot->trvtmp->driver_name);
 				tg_send_message(msg, bot->chat_id);
 				tg_send_message("Confermi? [S/N]", bot->chat_id);
 				bot->mode = CONFIRM;
