@@ -394,11 +394,14 @@ void update_bot(struct bot *bot, struct json_object *update) {
 				break;
 			}
 
-			case ADD_DESTINATION:
-				bot->trvtmp->destination = text;
+			case ADD_DESTINATION: {
+				size_t len = strlen(text) + 1;
+				bot->trvtmp->destination = malloc(len);
+				strncpy(bot->trvtmp->destination, text, len);
 				bot->mode = ADD_DATE;
 				tg_send_message("Inviami la data del viaggio nel seguente formato GG-MM-AAAA", bot->chat_id);
 				break;
+			}
 
 			case ADD_DATE: {
 				time_t epoch;
