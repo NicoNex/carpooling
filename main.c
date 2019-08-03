@@ -115,7 +115,6 @@ void update_bot(struct bot *bot, struct json_object *update) {
 		const char *text = json_object_get_string(textobj);
 		const char *username = json_object_get_string(usrobj);
 
-		// TODO: make it free trvtmp and drvtmp otherwise it's hamarah
 		// we need to check for "/annulla" in any case
 		if (!strcmp(text, "/annulla")) {
 			switch (bot->state) {

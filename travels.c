@@ -49,7 +49,7 @@ list_t load_travels() {
 
 
 static void refresh_travel_ids(list_t node) {
-	static int counter;
+	static int counter = 1;
 
 	if (node == NULL) {
 		counter = 1;
