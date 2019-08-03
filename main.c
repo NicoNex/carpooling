@@ -61,7 +61,6 @@ struct bot {
 	int64_t chat_id;
 	int state;
 	int mode;
-	int next_mode;
 	struct driver *drvtmp;
 	struct travel *trvtmp;
 };
