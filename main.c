@@ -21,22 +21,25 @@
 
 enum modes {
 	NO_OP,
+	
 	SELECT_DRIVER,
 	RATE,
-	ADD_NAME,
-	ADD_AGE,
-	ADD_VEHICLE,
-	ADD_SEATS,
-	CONFIRM_ADD_DRV,
-	CONFIRM_UPD_DRV,
+	
+	GET_NAME,
+	GET_AGE,
+	GET_VEHICLE,
+	GET_SEATS,
+	
 	DEL_DRIVER,
-	ADD_DESTINATION,
-	ADD_DATE,
-	ADD_DRIVER_ID,
+	
+	GET_DESTINATION,
+	GET_DATE,
+	GET_DRIVER_ID,
+	
 	MOD_TRAVEL,
-	CONFIRM_ADD_TRV,
-	CONFIRM_UPD_TRV,
-	DEL_TRAVEL
+	DEL_TRAVEL,
+
+	CONFIRM
 };
 
 
@@ -152,7 +155,7 @@ void update_bot(struct bot *bot, struct json_object *update) {
 
 				else if (!strcmp(text, "/agg_guidatore")) {
 					bot->state = ADD_DRV;
-					bot->mode = ADD_NAME;
+					bot->mode = GET_NAME;
 					bot->drvtmp = calloc(1, sizeof(struct driver));
 					tg_send_message("Scrivimi il nome del guidatore che vuoi aggiungere", bot->chat_id);
 				}
@@ -171,7 +174,7 @@ void update_bot(struct bot *bot, struct json_object *update) {
 
 				else if (!strcmp(text, "/agg_viaggio")) {
 					bot->state = ADD_TRV;
-					bot->mode = ADD_DESTINATION;
+					bot->mode = GET_DESTINATION;
 					bot->trvtmp = calloc(1, sizeof(struct travel));
 					tg_send_message("Scrivimi la destinazione del nuovo viaggio", bot->chat_id);
 				}
@@ -209,7 +212,7 @@ void update_bot(struct bot *bot, struct json_object *update) {
 
 				case MOD_DRV:
 					snprintf(msg, 511, "Scrivi il nuovo nome di %s", bot->drvtmp->name);
-					bot->mode = ADD_NAME;
+					bot->mode = GET_NAME;
 					break;
 				}
 
@@ -236,16 +239,16 @@ void update_bot(struct bot *bot, struct json_object *update) {
 				break;
 			}
 
-			case ADD_NAME: {
+			case GET_NAME: {
 				size_t len = strlen(text) + 1;
 				bot->drvtmp->name = malloc(len);
 				strncpy(bot->drvtmp->name, text, len);
-				bot->mode = ADD_AGE;
+				bot->mode = GET_AGE;
 				tg_send_message("Inviami l'età del guidatore scrivendo solo il numero degli anni", bot->chat_id);
 				break;
 			}
 
-			case ADD_AGE: {
+			case GET_AGE: {
 				char msg[512];
 				int age = strtol(text, NULL, 10);
 
@@ -256,23 +259,22 @@ void update_bot(struct bot *bot, struct json_object *update) {
 				}
 
 				bot->drvtmp->age = age;
-				bot->mode = ADD_VEHICLE;
+				bot->mode = GET_VEHICLE;
 				snprintf(msg, 512, "Inviami il tipo di veicolo guidato da %s", bot->drvtmp->name);
 				tg_send_message(msg, bot->chat_id);
 				break;
 			}
 
-			case ADD_VEHICLE: {
+			case GET_VEHICLE: {
 				size_t len = strlen(text) + 1;
 				bot->drvtmp->vehicle = malloc(len);
 				strncpy(bot->drvtmp->vehicle, text, len);
-				bot->mode = ADD_SEATS;
+				bot->mode = GET_SEATS;
 				tg_send_message("Inviami il numero di posti dispobibili", bot->chat_id);
 				break;
 			}
 
-			// BUG: it should not always go into CONFIRM_ADD_DRV mode
-			case ADD_SEATS: {
+			case GET_SEATS: {
 				char msg[511];
 				int seats = strtol(text, NULL, 10);
 
@@ -284,64 +286,10 @@ void update_bot(struct bot *bot, struct json_object *update) {
 
 				bot->drvtmp->seats = seats;
 
-				switch (bot->state) {
-				case ADD_DRV:
-					bot->mode = CONFIRM_ADD_DRV;
-					break;
-				
-				case MOD_DRV:
-					bot->mode = CONFIRM_UPD_DRV;
-					break;
-				}
-
 				snprintf(msg, 511, "Nome: %s%%0AEtà: %d%%0AVeicolo: %s%%0APosti: %d", bot->drvtmp->name, bot->drvtmp->age, bot->drvtmp->vehicle, bot->drvtmp->seats);
 				tg_send_message(msg, bot->chat_id);
 				tg_send_message("Confermi? [S/N]", bot->chat_id);
-				break;
-			}
-
-			case CONFIRM_ADD_DRV: {
-				char response = tolower(text[0]);
-
-				if (response == 's') {
-					drivers = add_driver(drivers, bot->drvtmp);
-					bot->mode = NO_OP;
-					bot->state = DEFAULT;
-					send_drivers(bot->chat_id);
-				}
-
-				else if (response == 'n') {
-					bot->mode = NO_OP;
-					bot->state = DEFAULT;
-					free(bot->drvtmp);
-					tg_send_message("Inserimento annullato", bot->chat_id);
-				}
-
-				else
-					tg_send_message("Risposta non valida, scrivi 's' per confermare o 'n' per annullare", bot->chat_id);
-
-				break;
-			}
-
-			case CONFIRM_UPD_DRV: {
-				char response = tolower(text[0]);
-
-				if (response == 's') {
-					update_drivers_file(drivers);
-					bot->mode = NO_OP;
-					bot->state = DEFAULT;
-					send_drivers(bot->chat_id);
-				}
-
-				else if (response == 'n') {
-					tg_send_message("Inserimento annullato", bot->chat_id);
-					bot->mode = NO_OP;
-					bot->state = DEFAULT;
-				}
-
-				else
-					tg_send_message("Risposta non valida, scrivi 's' per confermare o 'n' per annullare", bot->chat_id);
-
+				bot->mode = CONFIRM;
 				break;
 			}
 
@@ -382,21 +330,21 @@ void update_bot(struct bot *bot, struct json_object *update) {
 					break;
 				}
 
-				bot->mode = ADD_DESTINATION;
+				bot->mode = GET_DESTINATION;
 				tg_send_message("Scrivimi la destinazione del nuovo viaggio", bot->chat_id);
 				break;
 			}
 
-			case ADD_DESTINATION: {
+			case GET_DESTINATION: {
 				size_t len = strlen(text) + 1;
 				bot->trvtmp->destination = malloc(len);
 				strncpy(bot->trvtmp->destination, text, len);
-				bot->mode = ADD_DATE;
+				bot->mode = GET_DATE;
 				tg_send_message("Inviami la data del viaggio nel seguente formato GG-MM-AAAA", bot->chat_id);
 				break;
 			}
 
-			case ADD_DATE: {
+			case GET_DATE: {
 				time_t epoch;
 				struct tm tm;
 
@@ -415,13 +363,13 @@ void update_bot(struct bot *bot, struct json_object *update) {
 
 				bot->trvtmp->date = malloc(buflen);
 				memcpy(bot->trvtmp->date, buf, buflen);
-				bot->mode = ADD_DRIVER_ID;
+				bot->mode = GET_DRIVER_ID;
 				send_drivers(bot->chat_id);
 				tg_send_message("Inviami l'ID del guidatore collegato al viaggio", bot->chat_id);
 				break;
 			}
 
-			case ADD_DRIVER_ID: {
+			case GET_DRIVER_ID: {
 				int id = strtol(text, NULL, 10);
 				struct driver *tmp = get_driver(drivers, id);
 				if (!tmp) {
@@ -433,60 +381,57 @@ void update_bot(struct bot *bot, struct json_object *update) {
 				bot->trvtmp->driver_name = malloc(nlen);
 				strncpy(bot->trvtmp->driver_name, tmp->name, nlen);
 
-				switch (bot->state) {
-				case ADD_TRV:
-					bot->mode = CONFIRM_ADD_TRV;
-					break;
-
-				case MOD_TRV:
-					bot->mode = CONFIRM_UPD_TRV;
-					break;
-				}
-
 				char msg[511];
 				snprintf(msg, 511, "Destinazione: %s%%0AData: %s%%0AGuidatore: %s", bot->trvtmp->destination, bot->trvtmp->date, bot->trvtmp->driver_name);
 				tg_send_message(msg, bot->chat_id);
 				tg_send_message("Confermi? [S/N]", bot->chat_id);
+				bot->mode = CONFIRM;
 				break;
 			}
 
-			case CONFIRM_ADD_TRV: {
+			case CONFIRM: {
 				char response = tolower(text[0]);
 
-				if (response == 's') {
-					travels = add_travel(travels, bot->trvtmp);
+				if (response == 's') {					
+					switch (bot->state) {
+						case ADD_DRV:
+							drivers = add_driver(drivers, bot->drvtmp);
+							send_drivers(bot->chat_id);
+							break;
+
+						case MOD_DRV:
+							update_drivers_file(drivers);
+							send_drivers(bot->chat_id);
+							break;
+
+						case ADD_TRV:
+							travels = add_travel(travels, bot->trvtmp);
+							send_travels(bot->chat_id);
+							break;
+
+						case MOD_TRV:
+							update_travels_file(travels);
+							send_travels(bot->chat_id);
+							break;
+					}
 					bot->mode = NO_OP;
 					bot->state = DEFAULT;
-					send_travels(bot->chat_id);
 				}
 
 				else if (response == 'n') {
+					switch (bot->state) {
+						case ADD_TRV:
+							free(bot->trvtmp);
+							break;
+
+						case ADD_DRV:
+							free(bot->drvtmp);
+							break;
+					}
+
 					bot->mode = NO_OP;
 					bot->state = DEFAULT;
-					free(bot->trvtmp);
-					tg_send_message("Inserimento annullato", bot->chat_id);
-				}
-
-				else
-					tg_send_message("Risposta non valida, scrivi 's' per confermare o 'n' per annullare", bot->chat_id);
-
-				break;
-			}
-
-			case CONFIRM_UPD_TRV: {
-				char response = tolower(text[0]);
-
-				if (response == 's') {
-					update_travels_file(travels);
-					bot->mode = NO_OP;
-					bot->state = DEFAULT;
-					send_travels(bot->chat_id);
-				}
-
-				else if (response == 'n') {
-					bot->mode = NO_OP;
-					bot->state = DEFAULT;
-					tg_send_message("Modifica annullata", bot->chat_id);
+					tg_send_message("Azione annullata", bot->chat_id);
 				}
 
 				else
