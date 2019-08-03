@@ -144,7 +144,6 @@ void update_bot(struct bot *bot, struct json_object *update) {
 				else if (!strcmp(text, "/valuta")) {
 					bot->state = RATE_DRV;
 					bot->mode = SELECT_DRIVER;
-					// bot->next_mode = RATE;
 					tg_send_message("Scrivimi l'ID del guidatore che vuoi valutare", bot->chat_id);
 				}
 
@@ -161,7 +160,6 @@ void update_bot(struct bot *bot, struct json_object *update) {
 				else if (!strcmp(text, "/mod_guidatore")) {
 					bot->state = MOD_DRV;
 					bot->mode = SELECT_DRIVER;
-					// bot->next_mode = ADD_NAME;
 					tg_send_message("Scrivimi l'ID del guidatore che vuoi modificare", bot->chat_id);
 				}
 
@@ -174,16 +172,13 @@ void update_bot(struct bot *bot, struct json_object *update) {
 				else if (!strcmp(text, "/agg_viaggio")) {
 					bot->state = ADD_TRV;
 					bot->mode = ADD_DESTINATION;
-					// bot->next_mode = CONFIRM_ADD_TRV;
 					bot->trvtmp = calloc(1, sizeof(struct travel));
 					tg_send_message("Scrivimi la destinazione del nuovo viaggio", bot->chat_id);
 				}
 
-				// TODO: complete this command
 				else if (!strcmp(text, "/mod_viaggio")) {
 					bot->state = MOD_TRV;
 					bot->mode = MOD_TRAVEL;
-					// bot->next_mode = CONFIRM_UPD_TRV;
 					tg_send_message("Scrivimi l'ID del viaggio che vuoi modificare", bot->chat_id);
 				}
 
@@ -212,7 +207,7 @@ void update_bot(struct bot *bot, struct json_object *update) {
 					bot->mode = RATE;
 					break;
 
-				case ADD_DRV:
+				case MOD_DRV:
 					snprintf(msg, 511, "Scrivi il nuovo nome di %s", bot->drvtmp->name);
 					bot->mode = ADD_NAME;
 					break;
@@ -306,7 +301,6 @@ void update_bot(struct bot *bot, struct json_object *update) {
 			}
 
 			case CONFIRM_ADD_DRV: {
-				puts("CONFIRM_ADD_DRV");
 				char response = tolower(text[0]);
 
 				if (response == 's') {

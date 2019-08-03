@@ -116,7 +116,7 @@ list_t del_travel(list_t node, const int id) {
 	list_t first = node;
 	list_t prev = NULL;
 
-	for (list_t tmp = node; node; node = NEXT(node)) {
+	for (list_t tmp = node; tmp; tmp = NEXT(tmp)) {
 		struct travel *trv = GET_OBJ(node);
 
 		if (trv->id == id) {
@@ -129,6 +129,7 @@ list_t del_travel(list_t node, const int id) {
 			free(tmp);
 			break;
 		}
+		prev = tmp;
 	}
 
 	refresh_travel_ids(first);

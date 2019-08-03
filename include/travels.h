@@ -18,8 +18,6 @@
 struct travel {
 	int id;
 	char *date;
-	int driver_id; // deprecated
-	time_t epoch;
 	char *destination;
 	char *driver_name;
 };
