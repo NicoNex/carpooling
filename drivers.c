@@ -21,7 +21,7 @@ static void refresh_driver_ids(list_t node) {
 
 	struct driver *tmp = node->ptr;
 	tmp->id = counter++;
-	refresh_driver_ids(node->next);
+	refresh_driver_ids(NEXT(node));
 }
 
 
@@ -67,11 +67,11 @@ struct driver *get_driver(list_t node, const int id) {
 	if (node == NULL)
 		return NULL;
 
-	struct driver *drv = node->ptr;
+	struct driver *drv = GET_OBJ(node);
 	if (drv->id == id)
 		return drv;
 
-	return get_driver(node->next, id);
+	return get_driver(NEXT(node), id);
 
 }
 
@@ -90,8 +90,8 @@ void update_drivers_file(list_t lst) {
 	main = json_object_new_object();
 	array = json_object_new_array();
 
-	for (list_t tmp = lst; tmp; tmp = next(tmp)) {
-		struct driver *drv = get_object(tmp);
+	for (list_t tmp = lst; tmp; tmp = NEXT(tmp)) {
+		struct driver *drv = GET_OBJ(tmp);
 
 		driver = json_object_new_object();
 		id = json_object_new_int(drv->id);
@@ -136,7 +136,7 @@ list_t del_driver(list_t node, const int id) {
 	list_t first = node;
 	list_t prev = NULL;
 
-	for (list_t tmp = node; tmp; tmp = next(tmp)) {
+	for (list_t tmp = node; tmp; tmp = NEXT(tmp)) {
 		struct driver *drv = tmp->ptr;
 
 		if (drv->id == id) {
@@ -161,7 +161,7 @@ list_t del_driver(list_t node, const int id) {
 
 // TODO: maybe make this recursive
 void dispose_drivers(const list_t lst) {
-	for (list_t tmp = lst; tmp != NULL; tmp = next(tmp))
+	for (list_t tmp = lst; tmp != NULL; tmp = NEXT(tmp))
 		free(tmp->ptr);
 
 	dispose_list(lst);

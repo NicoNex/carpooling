@@ -15,6 +15,10 @@ struct node {
 
 typedef struct node *list_t;
 
+
+#define GET_OBJ(node) (node->ptr)
+#define NEXT(node) (node->next)
+
 /*
  * TODO: doc
  */

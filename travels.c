@@ -75,7 +75,7 @@ void update_travels_file(const list_t lst) {
 	array = json_object_new_array();
 
 	for (list_t tmp = lst; tmp; tmp = next(tmp)) {
-		struct travel *trv = get_object(tmp);
+		struct travel *trv = GET_OBJ(tmp);
 
 		travel = json_object_new_object();
 		id = json_object_new_int(trv->id);
@@ -116,8 +116,8 @@ list_t del_travel(list_t node, const int id) {
 	list_t first = node;
 	list_t prev = NULL;
 
-	for (list_t tmp = node; node; node = next(node)) {
-		struct travel *trv = get_object(node);
+	for (list_t tmp = node; node; node = NEXT(node)) {
+		struct travel *trv = GET_OBJ(node);
 
 		if (trv->id == id) {
 			if (prev)
@@ -141,7 +141,7 @@ struct travel *get_travel(list_t node, const int id) {
 	if (node == NULL)
 		return NULL;
 
-	struct travel *drv = node->ptr;
+	struct travel *drv = GET_OBJ(node);
 	if (drv->id == id)
 		return drv;
 
@@ -150,7 +150,7 @@ struct travel *get_travel(list_t node, const int id) {
 
 
 void dispose_travels(list_t lst) {
-	for (list_t tmp = lst; tmp != NULL; tmp = next(tmp))
+	for (list_t tmp = lst; tmp != NULL; tmp = NEXT(tmp))
 		free(tmp->ptr);
 
 	dispose_list(lst);
