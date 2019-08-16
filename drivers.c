@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include "include/drivers.h"
 #include "include/filehandler.h"
 
@@ -35,7 +36,14 @@ list_t load_drivers() {
 	drivers_num = json_object_array_length(drivers_json);
 
 	for (int i = 0; i < drivers_num; i++) {
-		struct json_object *driverobj, *id, *name, *age, *vehicle, *rating, *seats;
+		struct json_object  *id,
+							*age,
+							*name,
+							*token,
+							*seats,
+							*rating,
+							*vehicle,
+							*driverobj;
 
 		driverobj = json_object_array_get_idx(drivers_json, i);
 
@@ -44,7 +52,8 @@ list_t load_drivers() {
 				&& json_object_object_get_ex(driverobj, "age", &age)
 				&& json_object_object_get_ex(driverobj, "vehicle", &vehicle)
 				&& json_object_object_get_ex(driverobj, "rating", &rating)
-				&& json_object_object_get_ex(driverobj, "seats", &seats))) {
+				&& json_object_object_get_ex(driverobj, "seats", &seats)
+				&& json_object_object_get_ex(driverobj, "token", &token))) {
 			continue;
 		}
 
@@ -53,6 +62,7 @@ list_t load_drivers() {
 		drv->age = json_object_get_int(age);
 		drv->name = json_object_get_string(name);
 		drv->seats = json_object_get_int(seats);
+		drv->token = json_object_get_int64(token);
 		drv->rating = json_object_get_int(rating);
 		drv->vehicle = json_object_get_string(vehicle);
 
@@ -76,6 +86,18 @@ struct driver *get_driver(list_t node, const int id) {
 }
 
 
+struct driver *get_driver_by_token(list_t node, const int64_t token) {
+	if (node == NULL)
+		return NULL;
+
+	struct driver *drv = GET_OBJ(node);
+	if (drv->token == token)
+		return drv;
+
+	return get_driver_by_token(NEXT(node), token);
+}
+
+
 void update_drivers_file(list_t lst) {
 	struct json_object  *main,
 						*array,
@@ -85,6 +107,7 @@ void update_drivers_file(list_t lst) {
 						*age,
 						*vehicle,
 						*seats,
+						*token,
 						*rating;
 
 	main = json_object_new_object();
@@ -100,6 +123,7 @@ void update_drivers_file(list_t lst) {
 		vehicle = json_object_new_string(drv->vehicle);
 		seats = json_object_new_int(drv->seats);
 		rating = json_object_new_int(drv->rating);
+		token = json_object_new_int64(drv->token);
 
 		json_object_object_add(driver, "id", id);
 		json_object_object_add(driver, "name", name);
@@ -107,6 +131,7 @@ void update_drivers_file(list_t lst) {
 		json_object_object_add(driver, "vehicle", vehicle);
 		json_object_object_add(driver, "seats", seats);
 		json_object_object_add(driver, "rating", rating);
+		json_object_object_add(driver, "token", token);
 
 		json_object_array_add(array, driver);
 	}

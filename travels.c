@@ -23,14 +23,20 @@ list_t load_travels() {
 	travels_num = json_object_array_length(travels_json);
 
 	for (int i = 0; i < travels_num; i++) {
-		struct json_object *travel_obj, *driver_name, *destination, *date, *id;
+		struct json_object  *travel_obj, 
+							*driver_name, 
+							*destination, 
+							*price,
+							*date,
+							*id;
 
 		travel_obj = json_object_array_get_idx(travels_json, i);
 
 		if (!(json_object_object_get_ex(travel_obj, "driver_name", &driver_name)
 				&& json_object_object_get_ex(travel_obj, "destination", &destination)
 				&& json_object_object_get_ex(travel_obj, "id", &id)
-				&& json_object_object_get_ex(travel_obj, "date", &date))) {
+				&& json_object_object_get_ex(travel_obj, "date", &date)
+				&& json_object_object_get_ex(travel_obj, "price", &price))) {
 			continue;
 		}
 
@@ -38,6 +44,7 @@ list_t load_travels() {
 
 		trv->id = json_object_get_int(id);
 		trv->date = json_object_get_string(date);
+		trv->price = (float) json_object_get_double(price);
 		trv->driver_name = json_object_get_string(driver_name);
 		trv->destination = json_object_get_string(destination);
 
@@ -67,6 +74,8 @@ void update_travels_file(const list_t lst) {
 						*date,
 						*main,
 						*array,
+						*price,
+						*token,
 						*travel,
 						*driver_name,
 						*destination;
@@ -80,11 +89,15 @@ void update_travels_file(const list_t lst) {
 		travel = json_object_new_object();
 		id = json_object_new_int(trv->id);
 		date = json_object_new_string(trv->date);
+		price = json_object_new_double(trv->price);
+		token = json_object_new_int64(trv->token);
 		driver_name = json_object_new_string(trv->driver_name);
 		destination = json_object_new_string(trv->destination);
 
 		json_object_object_add(travel, "id", id);
 		json_object_object_add(travel, "date", date);
+		json_object_object_add(travel, "price", price);
+		json_object_object_add(travel, "token", token);
 		json_object_object_add(travel, "driver_name", driver_name);
 		json_object_object_add(travel, "destination", destination);
 
@@ -120,14 +133,36 @@ list_t del_travel(list_t node, const int id) {
 		struct travel *trv = GET_OBJ(node);
 
 		if (trv->id == id) {
-			if (prev)
-				prev->next = tmp->next;
-			else
-				first = tmp->next;
+			(prev) ? (prev->next = tmp->next) : (first = tmp->next);
 
 			free(trv);
 			free(tmp);
 			break;
+		}
+		prev = tmp;
+	}
+
+	refresh_travel_ids(first);
+	update_travels_file(first);
+	return first;
+}
+
+
+list_t del_travels_with_token(list_t node, const int64_t token) {
+	if (node == NULL)
+		return NULL;
+
+	list_t first = node;
+	list_t prev = NULL;
+
+	for (list_t tmp = node; tmp; tmp = NEXT(tmp)) {
+		struct travel *trv = GET_OBJ(node);
+
+		if (trv->token == token) {
+			(prev) ? (prev->next = tmp->next) : (first = tmp->next);
+
+			free(trv);
+			free(tmp);
 		}
 		prev = tmp;
 	}

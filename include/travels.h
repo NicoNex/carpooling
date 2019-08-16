@@ -18,8 +18,10 @@
 struct travel {
 	int id;
 	char *date;
+	float price;
 	char *destination;
 	char *driver_name;
+	int64_t token;
 };
 
 // Loads the travels list from disk from a json file.
@@ -35,6 +37,9 @@ list_t add_travel(list_t travels, struct travel *travel);
 
 // deletes a travel from the travels list
 list_t del_travel(list_t travels, const int id);
+
+// Deletes all travels with the specified token.
+list_t del_travels_with_token(list_t travels, const int64_t token);
 
 // Updates the file that stores the information regarding the travels
 void update_travels_file(const list_t travels);

@@ -19,6 +19,7 @@ struct driver {
 	int rating;
 	char *name;
 	char *vehicle;
+	int64_t token;
 };
 
 // Loads the drivers list from disk from a json file.
@@ -31,13 +32,18 @@ void dispose_drivers(const list_t drivers);
 void update_drivers_file(const list_t drivers);
 
 
-// Used to add a new driver to the list
+// Adds a new driver to the list
 list_t add_driver(list_t drivers, struct driver *drv);
 
-
+// Deletes the driver that has the specified ID
 list_t del_driver(list_t drivers, const int id);
 
+// Returns the pointer to the driver with the specified id
 struct driver *get_driver(list_t drivers, const int id);
+
+
+// Returns the pointer to the driver with the specified token.
+struct driver *get_driver_by_token(list_t drivers, const int64_t token);
 
 
 #endif // DRIVERS_H_
