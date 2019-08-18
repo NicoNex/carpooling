@@ -27,6 +27,7 @@ list_t load_travels() {
 							*driver_name, 
 							*destination, 
 							*price,
+							*token,
 							*date,
 							*id;
 
@@ -36,7 +37,8 @@ list_t load_travels() {
 				&& json_object_object_get_ex(travel_obj, "destination", &destination)
 				&& json_object_object_get_ex(travel_obj, "id", &id)
 				&& json_object_object_get_ex(travel_obj, "date", &date)
-				&& json_object_object_get_ex(travel_obj, "price", &price))) {
+				&& json_object_object_get_ex(travel_obj, "price", &price)
+				&& json_object_object_get_ex(travel_obj, "token", &token))) {
 			continue;
 		}
 
@@ -45,6 +47,7 @@ list_t load_travels() {
 		trv->id = json_object_get_int(id);
 		trv->date = json_object_get_string(date);
 		trv->price = (float) json_object_get_double(price);
+		trv->token = json_object_get_int64(token);
 		trv->driver_name = json_object_get_string(driver_name);
 		trv->destination = json_object_get_string(destination);
 
@@ -83,14 +86,17 @@ void update_travels_file(const list_t lst) {
 	main = json_object_new_object();
 	array = json_object_new_array();
 
-	for (list_t tmp = lst; tmp; tmp = next(tmp)) {
+	for (list_t tmp = lst; tmp; tmp = NEXT(tmp)) {
 		struct travel *trv = GET_OBJ(tmp);
 
 		travel = json_object_new_object();
 		id = json_object_new_int(trv->id);
 		date = json_object_new_string(trv->date);
 		price = json_object_new_double(trv->price);
+		
+		printf("TOKEN: %ld\n", trv->token);
 		token = json_object_new_int64(trv->token);
+		
 		driver_name = json_object_new_string(trv->driver_name);
 		destination = json_object_new_string(trv->destination);
 
@@ -130,7 +136,7 @@ list_t del_travel(list_t node, const int id) {
 	list_t prev = NULL;
 
 	for (list_t tmp = node; tmp; tmp = NEXT(tmp)) {
-		struct travel *trv = GET_OBJ(node);
+		struct travel *trv = GET_OBJ(tmp);
 
 		if (trv->id == id) {
 			(prev) ? (prev->next = tmp->next) : (first = tmp->next);
@@ -154,17 +160,24 @@ list_t del_travels_with_token(list_t node, const int64_t token) {
 
 	list_t first = node;
 	list_t prev = NULL;
+	list_t tmp = node;
 
-	for (list_t tmp = node; tmp; tmp = NEXT(tmp)) {
-		struct travel *trv = GET_OBJ(node);
+	while (tmp) {
+		struct travel *trv = GET_OBJ(tmp);
 
 		if (trv->token == token) {
 			(prev) ? (prev->next = tmp->next) : (first = tmp->next);
 
+			list_t ntmp = NEXT(tmp);
 			free(trv);
 			free(tmp);
+			tmp = ntmp;
 		}
-		prev = tmp;
+
+		else {
+			prev = tmp;
+			tmp = NEXT(tmp);
+		}
 	}
 
 	refresh_travel_ids(first);

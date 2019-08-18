@@ -2,12 +2,12 @@
   "drivers":[
     {
       "id":1,
-      "name":"da cancellare",
-      "age":85,
-      "vehicle":"atrhyu6jytrgf",
-      "seats":25,
-      "rating":0,
-      "token":1565959041
+      "name":"Nicolò",
+      "age":21,
+      "vehicle":"Tesla Roadster",
+      "seats":1,
+      "rating":9,
+      "token":1565954476
     },
     {
       "id":2,
@@ -17,15 +17,6 @@
       "seats":3,
       "rating":0,
       "token":1565954484
-    },
-    {
-      "id":3,
-      "name":"Nicolò",
-      "age":21,
-      "vehicle":"Tesla Roadster",
-      "seats":1,
-      "rating":9,
-      "token":1565954476
     }
   ]
 }

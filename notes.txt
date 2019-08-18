@@ -20,3 +20,5 @@ use mktime to convert from 'struct tm *' to 'time_t'
 time_t mktime(struct tm *timeptr);
 
 https://pubs.opengroup.org/onlinepubs/7908799/xsh/mktime.html
+
+usare l'epoch come id univoco per i guidatori porchiddio

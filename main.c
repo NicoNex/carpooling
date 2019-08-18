@@ -222,6 +222,7 @@ void update_bot(struct bot *bot, struct json_object *update) {
 				else if (!strcmp(text, "/canc_guidatore")) {
 					bot->state = DEL_DRV;
 					bot->mode = DEL_DRIVER;
+					send_drivers(drivers, bot->chat_id);
 					tg_send_message("Scrivimi l'ID del guidatore che vuoi cancellare", bot->chat_id);
 				}
 
@@ -241,6 +242,7 @@ void update_bot(struct bot *bot, struct json_object *update) {
 				else if (!strcmp(text, "/canc_viaggio")) {
 					bot->state = DEL_TRV;
 					bot->mode = DEL_TRAVEL;
+					send_travels(travels, bot->chat_id);
 					tg_send_message("Scrivimi l'ID del viaggio che vuoi cancellare", bot->chat_id);
 				}
 
@@ -373,7 +375,6 @@ void update_bot(struct bot *bot, struct json_object *update) {
 					break;
 				}
 
-				// TODO: fix segfault here
 				travels = del_travels_with_token(travels, drv->token);
 				drivers = del_driver(drivers, id);
 				tg_send_message("Guidatore cancellato", bot->chat_id);
@@ -453,6 +454,7 @@ void update_bot(struct bot *bot, struct json_object *update) {
 				}
 
 				bot->trvtmp->token = tmp->token;
+				printf("%ld\n", bot->trvtmp->token);
 				int nlen = strlen(tmp->name) + 1;
 				bot->trvtmp->driver_name = malloc(nlen);
 				strncpy(bot->trvtmp->driver_name, tmp->name, nlen);

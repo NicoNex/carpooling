@@ -162,7 +162,7 @@ list_t del_driver(list_t node, const int id) {
 	list_t prev = NULL;
 
 	for (list_t tmp = node; tmp; tmp = NEXT(tmp)) {
-		struct driver *drv = tmp->ptr;
+		struct driver *drv = GET_OBJ(tmp);
 
 		if (drv->id == id) {
 			if (prev)
