@@ -23,13 +23,13 @@ list_t load_travels() {
 	travels_num = json_object_array_length(travels_json);
 
 	for (int i = 0; i < travels_num; i++) {
-		struct json_object  *travel_obj, 
-							*driver_name, 
-							*destination, 
-							*price,
-							*token,
+		struct json_object  *id,
 							*date,
-							*id;
+							*token,
+							*price,
+							*travel_obj,
+							*driver_name,
+							*destination;
 
 		travel_obj = json_object_array_get_idx(travels_json, i);
 
@@ -66,9 +66,9 @@ static void refresh_travel_ids(list_t node) {
 		return;
 	}
 
-	struct travel *tmp = node->ptr;
+	struct travel *tmp = GET_OBJ(node);
 	tmp->id = counter++;
-	refresh_travel_ids(node->next);
+	refresh_travel_ids(NEXT(node));
 }
 
 
@@ -190,11 +190,23 @@ struct travel *get_travel(list_t node, const int id) {
 	if (node == NULL)
 		return NULL;
 
-	struct travel *drv = GET_OBJ(node);
-	if (drv->id == id)
-		return drv;
+	struct travel *trv = GET_OBJ(node);
+	if (trv->id == id)
+		return trv;
 
-	return get_travel(node->next, id);
+	return get_travel(NEXT(node), id);
+}
+
+
+struct travel *get_travel_with_token(list_t node, const int64_t token) {
+	if (node == NULL)
+		return NULL;
+
+	struct travel *trv = GET_OBJ(node);
+	if (trv->token == token)
+		return trv;
+
+	return get_travel_with_token(NEXT(node), token);
 }
 
 

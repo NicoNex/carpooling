@@ -73,7 +73,7 @@ list_t load_drivers() {
 }
 
 
-struct driver *get_driver(list_t node, const int id) {
+struct driver *get_driver_by_id(list_t node, const int id) {
 	if (node == NULL)
 		return NULL;
 
@@ -81,7 +81,7 @@ struct driver *get_driver(list_t node, const int id) {
 	if (drv->id == id)
 		return drv;
 
-	return get_driver(NEXT(node), id);
+	return get_driver_by_id(NEXT(node), id);
 
 }
 

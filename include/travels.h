@@ -41,6 +41,9 @@ list_t del_travel(list_t travels, const int id);
 // Deletes all travels with the specified token.
 list_t del_travels_with_token(list_t travels, const int64_t token);
 
+// Returns the travel pointer with the corresponding token.
+struct travel *get_travel_with_token(list_t travels, const int64_t token);
+
 // Updates the file that stores the information regarding the travels
 void update_travels_file(const list_t travels);
 

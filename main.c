@@ -40,6 +40,7 @@ enum modes {
 	MOD_TRAVEL,
 	DEL_TRAVEL,
 
+	GET_SORT_MODE,
 	GET_QRY,
 
 	CONFIRM
@@ -72,6 +73,7 @@ struct bot {
 	int64_t chat_id;
 	int state;
 	int mode;
+	int sort_mode;
 	struct driver *drvtmp;
 	struct travel *trvtmp;
 };
@@ -94,12 +96,43 @@ struct bot *new_bot(int64_t chat_id) {
 }
 
 
-// static void send_driver(const struct driver *drv, const int64_t chat_id) {
-// 	char msg[512];
-// 	snprintf(msg, 511, 
-// 			"*ID*: %d%%0A*Nome*: %s%%0A*Età*: %d%%0A*Veicolo*: %s%%0A*Posti*: %d%%0A*Valutazione*: %d%%0A%%0A", 
-// 			drv->id, drv->name, drv->age, drv->vehicle, drv->seats, drv->rating);
-// }
+static void sort_travels_by_price(list_t node) {
+	if (node == NULL)
+		return;
+
+	for (list_t tmp = node; tmp && NEXT(tmp); tmp = NEXT(tmp)) {
+		struct travel *trv = GET_OBJ(tmp);
+		struct travel *ntrv = GET_OBJ(NEXT(tmp));
+		
+		if (trv->price > ntrv->price) {
+			tmp->ptr = ntrv;
+			tmp->next->ptr = trv;
+		}
+	}
+
+	sort_travels_by_price(NEXT(node));
+}
+
+
+static void sort_travels_by_driver_rating(list_t node) {
+	if (node == NULL)
+		return;
+
+	for (list_t tmp = node; NEXT(tmp); tmp = NEXT(tmp)) {
+		struct travel *trv = GET_OBJ(tmp);
+		struct travel *ntrv = GET_OBJ(NEXT(tmp));
+
+		struct driver *drv = get_driver_by_token(drivers, trv->token);
+		struct driver *ndrv = get_driver_by_token(drivers, ntrv->token);
+
+		if (drv->rating < ndrv->rating) {
+			tmp->ptr = ntrv;
+			tmp->next->ptr = trv;
+		}
+	}
+
+	sort_travels_by_driver_rating(NEXT(node));
+}
 
 
 static void send_drivers(const list_t lst, const int64_t chat_id) {
@@ -109,7 +142,7 @@ static void send_drivers(const list_t lst, const int64_t chat_id) {
 	struct driver *drv = GET_OBJ(lst);
 	char msg[511];
 	snprintf(msg, 511, 
-			"*ID*: %d%%0A*Nome*: %s%%0A*Età*: %d%%0A*Veicolo*: %s%%0A*Posti*: %d%%0A*Valutazione*: %d%%0A%%0A", 
+			"*ID*: %d%%0A*Nome*: %s%%0A*Età*: %d%%0A*Veicolo*: %s%%0A*Posti*: %d%%0A*Valutazione*: %d/10", 
 			drv->id, drv->name, drv->age, drv->vehicle, drv->seats, drv->rating);
 	
 	tg_send_message(msg, chat_id);
@@ -123,9 +156,10 @@ static void send_travels(const list_t lst, const int64_t chat_id) {
 
 	char msg[511];
 	struct travel *trv = GET_OBJ(lst);
+	struct driver *drv = get_driver_by_token(drivers, trv->token);
 	snprintf(msg, 511, 
-			"*ID*: %d%%0A*Destinazione*: %s%%0A*Data*: %s%%0A*Guidatore*: %s%%0A*Prezzo*: %.2f €%%0A%%0A", 
-			trv->id, trv->destination, trv->date, trv->driver_name, trv->price);
+			"*ID*: %d%%0A*Destinazione*: %s%%0A*Data*: %s%%0A*Guidatore*: %s%%0A*Valutazione*: %d/10%%0A*Prezzo*: %.2f €", 
+			trv->id, trv->destination, trv->date, trv->driver_name, drv->rating, trv->price);
 	
 	tg_send_message(msg, chat_id);
 	send_travels(NEXT(lst), chat_id);
@@ -142,13 +176,18 @@ static void search_travels(const char *text, int64_t chat_id, int filter) {
 			lst = list_add(lst, trv);
 	}
 
-	// switch (filter) {
-	// 	case BY_PRICE:
-	// 		// code here
+	switch (filter) {
+		case BY_PRICE:
+			sort_travels_by_price(lst);
+			break;
 
-	// 	case BY_RATING:
-	// 		// code here
-	// }
+		case BY_RATING:
+			sort_travels_by_driver_rating(lst);
+			break;
+	}
+
+	send_travels(lst, chat_id);
+	dispose_travels(lst);
 }
 
 
@@ -201,8 +240,8 @@ void update_bot(struct bot *bot, struct json_object *update) {
 
 				else if (!strcmp(text, "/cerca")) {
 					bot->state = SEARCH;
-					bot->mode = GET_QRY;
-					tg_send_message("Scrivimi il nome della località da cercare", bot->chat_id);
+					bot->mode = GET_SORT_MODE;
+					tg_send_message("Vuoi ordinare la lista per prezzo o valutazione del guidatore? [P/V]", bot->chat_id);
 				}
 
 				else if (!strcmp(text, "/agg_guidatore")) {
@@ -268,7 +307,7 @@ void update_bot(struct bot *bot, struct json_object *update) {
 
 			case SELECT_DRIVER: {
 				int id = strtol(text, NULL, 10);
-				bot->drvtmp = get_driver(drivers, id);
+				bot->drvtmp = get_driver_by_id(drivers, id);
 
 				if (bot->drvtmp == NULL) {
 					tg_send_message("ID incorretto.%0AScrivi solo il numero dell'ID del guidatore da valutare", bot->chat_id);
@@ -368,7 +407,7 @@ void update_bot(struct bot *bot, struct json_object *update) {
 
 			case DEL_DRIVER: {
 				int id = strtol(text, NULL, 10);
-				struct driver *drv = get_driver(drivers, id);
+				struct driver *drv = get_driver_by_id(drivers, id);
 				
 				if (!drv) {
 					tg_send_message("ID non valido%0AInviami un ID valido", bot->chat_id);
@@ -447,7 +486,7 @@ void update_bot(struct bot *bot, struct json_object *update) {
 
 			case GET_DRIVER_ID: {
 				int id = strtol(text, NULL, 10);
-				struct driver *tmp = get_driver(drivers, id);
+				struct driver *tmp = get_driver_by_id(drivers, id);
 				if (!tmp) {
 					tg_send_message("ID non valido%0AInviami un ID valido", bot->chat_id);
 					break;
@@ -478,10 +517,29 @@ void update_bot(struct bot *bot, struct json_object *update) {
 				break;
 			}
 
-			case GET_QRY: {
-				search_travels(text, bot->chat_id, BY_PRICE);
+			case GET_SORT_MODE: {
+				char response = tolower(text[0]);
+
+				switch (response) {
+					case 'p':
+						bot->sort_mode = BY_PRICE;
+						break;
+
+					case 'v':
+						bot->sort_mode = BY_RATING;
+						break;
+				}
+
+				bot->mode = GET_QRY;
+				tg_send_message("Scrivimi il nome della località da cercare", bot->chat_id);
 				break;
 			}
+
+			case GET_QRY:
+				search_travels(text, bot->chat_id, bot->sort_mode);
+				bot->mode = NO_OP;
+				bot->state = DEFAULT;
+				break;
 
 			case CONFIRM: {
 				char response = tolower(text[0]);

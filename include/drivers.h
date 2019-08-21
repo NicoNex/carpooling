@@ -39,7 +39,7 @@ list_t add_driver(list_t drivers, struct driver *drv);
 list_t del_driver(list_t drivers, const int id);
 
 // Returns the pointer to the driver with the specified id
-struct driver *get_driver(list_t drivers, const int id);
+struct driver *get_driver_by_id(list_t drivers, const int id);
 
 
 // Returns the pointer to the driver with the specified token.
