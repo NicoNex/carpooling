@@ -159,7 +159,7 @@ static void send_travels(const list_t lst, const int64_t chat_id) {
 	struct driver *drv = get_driver_by_token(drivers, trv->token);
 	snprintf(msg, 511, 
 			"*ID*: %d%%0A*Destinazione*: %s%%0A*Data*: %s%%0A*Guidatore*: %s%%0A*Valutazione*: %d/10%%0A*Prezzo*: %.2f €", 
-			trv->id, trv->destination, trv->date, trv->driver_name, drv->rating, trv->price);
+			trv->id, trv->destination, trv->date, drv->name, drv->rating, trv->price);
 	
 	tg_send_message(msg, chat_id);
 	send_travels(NEXT(lst), chat_id);
@@ -187,7 +187,7 @@ static void search_travels(const char *text, int64_t chat_id, int filter) {
 	}
 
 	send_travels(lst, chat_id);
-	dispose_travels(lst);
+	dispose_list(lst);
 }
 
 
@@ -494,9 +494,6 @@ void update_bot(struct bot *bot, struct json_object *update) {
 
 				bot->trvtmp->token = tmp->token;
 				printf("%ld\n", bot->trvtmp->token);
-				int nlen = strlen(tmp->name) + 1;
-				bot->trvtmp->driver_name = malloc(nlen);
-				strncpy(bot->trvtmp->driver_name, tmp->name, nlen);
 				tg_send_message("Inviami il prezzo del viaggio", bot->chat_id);
 				bot->mode = GET_PRICE;
 				break;
@@ -507,10 +504,12 @@ void update_bot(struct bot *bot, struct json_object *update) {
 				bot->trvtmp->price = price;
 				bot->mode = CONFIRM;
 
+				struct driver *drv = get_driver_by_token(drivers, bot->trvtmp->token);
 				char msg[511];
+
 				snprintf(msg, 511, 
 					"*Destinazione*: %s%%0A*Data*: %s%%0A*Guidatore*: %s%%0A*Prezzo*: %.2f €", 
-					bot->trvtmp->destination, bot->trvtmp->date, bot->trvtmp->driver_name, bot->trvtmp->price);
+					bot->trvtmp->destination, bot->trvtmp->date, drv->name, bot->trvtmp->price);
 				
 				tg_send_message(msg, bot->chat_id);
 				tg_send_message("Confermi? [S/N]", bot->chat_id);
@@ -528,6 +527,12 @@ void update_bot(struct bot *bot, struct json_object *update) {
 					case 'v':
 						bot->sort_mode = BY_RATING;
 						break;
+
+					default:
+						tg_send_message(
+							"Risposta non valida, scrivi 'P' per ordinare i viaggi per prezzo,"
+							"'V' per ordinarli in base alla valutazione del guidatore", bot->chat_id);
+						return;
 				}
 
 				bot->mode = GET_QRY;

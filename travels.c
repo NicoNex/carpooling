@@ -28,13 +28,11 @@ list_t load_travels() {
 							*token,
 							*price,
 							*travel_obj,
-							*driver_name,
 							*destination;
 
 		travel_obj = json_object_array_get_idx(travels_json, i);
 
-		if (!(json_object_object_get_ex(travel_obj, "driver_name", &driver_name)
-				&& json_object_object_get_ex(travel_obj, "destination", &destination)
+		if (!(json_object_object_get_ex(travel_obj, "destination", &destination)
 				&& json_object_object_get_ex(travel_obj, "id", &id)
 				&& json_object_object_get_ex(travel_obj, "date", &date)
 				&& json_object_object_get_ex(travel_obj, "price", &price)
@@ -48,7 +46,6 @@ list_t load_travels() {
 		trv->date = json_object_get_string(date);
 		trv->price = (float) json_object_get_double(price);
 		trv->token = json_object_get_int64(token);
-		trv->driver_name = json_object_get_string(driver_name);
 		trv->destination = json_object_get_string(destination);
 
 		travels_list = list_add(travels_list, trv);
@@ -80,7 +77,6 @@ void update_travels_file(const list_t lst) {
 						*price,
 						*token,
 						*travel,
-						*driver_name,
 						*destination;
 
 	main = json_object_new_object();
@@ -93,18 +89,13 @@ void update_travels_file(const list_t lst) {
 		id = json_object_new_int(trv->id);
 		date = json_object_new_string(trv->date);
 		price = json_object_new_double(trv->price);
-		
-		printf("TOKEN: %ld\n", trv->token);
 		token = json_object_new_int64(trv->token);
-		
-		driver_name = json_object_new_string(trv->driver_name);
 		destination = json_object_new_string(trv->destination);
 
 		json_object_object_add(travel, "id", id);
 		json_object_object_add(travel, "date", date);
 		json_object_object_add(travel, "price", price);
 		json_object_object_add(travel, "token", token);
-		json_object_object_add(travel, "driver_name", driver_name);
 		json_object_object_add(travel, "destination", destination);
 
 		json_object_array_add(array, travel);
