@@ -5,7 +5,7 @@
       "date":"01-06-2021",
       "price":56.0,
       "token":1565954484,
-      "driver_name":"Stegosandro",
+      "seats":10,
       "destination":"Porto Cesareo"
     },
     {
@@ -13,7 +13,7 @@
       "date":"01-06-2020",
       "price":1500.0,
       "token":1565954476,
-      "driver_name":"Nicolò",
+      "seats":10,
       "destination":"Bahamas"
     }
   ]

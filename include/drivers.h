@@ -15,7 +15,7 @@
 struct driver {
 	int id;
 	int age;
-	int seats;
+	// int seats;
 	int rating;
 	char *name;
 	char *vehicle;

@@ -20,37 +20,22 @@ typedef struct node *list_t;
 #define NEXT(node) (node->next)
 
 /*
- * TODO: doc
+ * Returns the pointer to the first node of a list.
  */
 list_t new_list(void *ptr);
 
 /*
- * TODO: doc
+ * Adds an element to the list and returns the pointer to the head.
  */
 list_t list_add(list_t list, void *ptr);
 
 /*
- * TODO: doc, broken
- */
-// int list_append(list_t list, void *ptr);
-
-/*
- * TODO: doc
+ * Deletes a node from the list and returns the pointer to the head.
  */
 list_t list_del(list_t list, struct node *node);
 
 /*
- * Returns the next element in a list
- */
-list_t next(list_t current);
-
-/*
- * Returns the object contained in a node
- */
-void *get_object(list_t current);
-
-/*
- * TODO: doc
+ * This function frees the list.
  */
 void dispose_list(list_t list);
 

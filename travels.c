@@ -27,6 +27,7 @@ list_t load_travels() {
 							*date,
 							*token,
 							*price,
+							*seats,
 							*travel_obj,
 							*destination;
 
@@ -36,6 +37,7 @@ list_t load_travels() {
 				&& json_object_object_get_ex(travel_obj, "id", &id)
 				&& json_object_object_get_ex(travel_obj, "date", &date)
 				&& json_object_object_get_ex(travel_obj, "price", &price)
+				&& json_object_object_get_ex(travel_obj, "seats", &seats)
 				&& json_object_object_get_ex(travel_obj, "token", &token))) {
 			continue;
 		}
@@ -45,6 +47,7 @@ list_t load_travels() {
 		trv->id = json_object_get_int(id);
 		trv->date = json_object_get_string(date);
 		trv->price = (float) json_object_get_double(price);
+		trv->seats = json_object_get_int(seats);
 		trv->token = json_object_get_int64(token);
 		trv->destination = json_object_get_string(destination);
 
@@ -76,6 +79,7 @@ void update_travels_file(const list_t lst) {
 						*array,
 						*price,
 						*token,
+						*seats,
 						*travel,
 						*destination;
 
@@ -90,12 +94,14 @@ void update_travels_file(const list_t lst) {
 		date = json_object_new_string(trv->date);
 		price = json_object_new_double(trv->price);
 		token = json_object_new_int64(trv->token);
+		seats = json_object_new_int(trv->seats);
 		destination = json_object_new_string(trv->destination);
 
 		json_object_object_add(travel, "id", id);
 		json_object_object_add(travel, "date", date);
 		json_object_object_add(travel, "price", price);
 		json_object_object_add(travel, "token", token);
+		json_object_object_add(travel, "seats", seats);
 		json_object_object_add(travel, "destination", destination);
 
 		json_object_array_add(array, travel);

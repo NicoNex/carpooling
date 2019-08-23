@@ -40,7 +40,6 @@ list_t load_drivers() {
 							*age,
 							*name,
 							*token,
-							*seats,
 							*rating,
 							*vehicle,
 							*driverobj;
@@ -52,7 +51,6 @@ list_t load_drivers() {
 				&& json_object_object_get_ex(driverobj, "age", &age)
 				&& json_object_object_get_ex(driverobj, "vehicle", &vehicle)
 				&& json_object_object_get_ex(driverobj, "rating", &rating)
-				&& json_object_object_get_ex(driverobj, "seats", &seats)
 				&& json_object_object_get_ex(driverobj, "token", &token))) {
 			continue;
 		}
@@ -61,7 +59,6 @@ list_t load_drivers() {
 		drv->id = json_object_get_int(id);
 		drv->age = json_object_get_int(age);
 		drv->name = json_object_get_string(name);
-		drv->seats = json_object_get_int(seats);
 		drv->token = json_object_get_int64(token);
 		drv->rating = json_object_get_int(rating);
 		drv->vehicle = json_object_get_string(vehicle);
@@ -106,7 +103,6 @@ void update_drivers_file(list_t lst) {
 						*name,
 						*age,
 						*vehicle,
-						*seats,
 						*token,
 						*rating;
 
@@ -121,7 +117,6 @@ void update_drivers_file(list_t lst) {
 		name = json_object_new_string(drv->name);
 		age = json_object_new_int(drv->age);
 		vehicle = json_object_new_string(drv->vehicle);
-		seats = json_object_new_int(drv->seats);
 		rating = json_object_new_int(drv->rating);
 		token = json_object_new_int64(drv->token);
 
@@ -129,7 +124,6 @@ void update_drivers_file(list_t lst) {
 		json_object_object_add(driver, "name", name);
 		json_object_object_add(driver, "age", age);
 		json_object_object_add(driver, "vehicle", vehicle);
-		json_object_object_add(driver, "seats", seats);
 		json_object_object_add(driver, "rating", rating);
 		json_object_object_add(driver, "token", token);
 
@@ -184,7 +178,6 @@ list_t del_driver(list_t node, const int id) {
 }
 
 
-// TODO: maybe make this recursive
 void dispose_drivers(const list_t lst) {
 	for (list_t tmp = lst; tmp != NULL; tmp = NEXT(tmp))
 		free(tmp->ptr);

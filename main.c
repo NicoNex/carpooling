@@ -23,12 +23,12 @@ enum modes {
 	NO_OP,
 	
 	SELECT_DRIVER,
+	SELECT_TRAVEL,
 	RATE,
 	
 	GET_NAME,
 	GET_AGE,
 	GET_VEHICLE,
-	GET_SEATS,
 	
 	DEL_DRIVER,
 	
@@ -36,11 +36,13 @@ enum modes {
 	GET_DATE,
 	GET_DRIVER_ID,
 	GET_PRICE,
+	GET_SEATS,
 	
 	MOD_TRAVEL,
 	DEL_TRAVEL,
 
 	GET_SORT_MODE,
+	GET_SEARCH_SEATS,
 	GET_QRY,
 
 	CONFIRM
@@ -58,6 +60,7 @@ enum commands {
 	ADD_TRV,
 	MOD_TRV,
 	DEL_TRV,
+	BOOK_TRV,
 
 	SEARCH
 };
@@ -86,7 +89,7 @@ volatile list_t travels;
 
 struct bot *new_bot(int64_t chat_id) {
 	struct bot *bot = malloc(sizeof(struct bot));
-
+	
 	bot->chat_id = chat_id;
 	bot->mode = NO_OP;
 	bot->state = DEFAULT;
@@ -142,8 +145,8 @@ static void send_drivers(const list_t lst, const int64_t chat_id) {
 	struct driver *drv = GET_OBJ(lst);
 	char msg[511];
 	snprintf(msg, 511, 
-			"*ID*: %d%%0A*Nome*: %s%%0A*Età*: %d%%0A*Veicolo*: %s%%0A*Posti*: %d%%0A*Valutazione*: %d/10", 
-			drv->id, drv->name, drv->age, drv->vehicle, drv->seats, drv->rating);
+			"*ID*: %d%%0A*Nome*: %s%%0A*Età*: %d%%0A*Veicolo*: %s%%0A*Valutazione*: %d/10", 
+			drv->id, drv->name, drv->age, drv->vehicle, drv->rating);
 	
 	tg_send_message(msg, chat_id);
 	send_drivers(NEXT(lst), chat_id);
@@ -158,8 +161,8 @@ static void send_travels(const list_t lst, const int64_t chat_id) {
 	struct travel *trv = GET_OBJ(lst);
 	struct driver *drv = get_driver_by_token(drivers, trv->token);
 	snprintf(msg, 511, 
-			"*ID*: %d%%0A*Destinazione*: %s%%0A*Data*: %s%%0A*Guidatore*: %s%%0A*Valutazione*: %d/10%%0A*Prezzo*: %.2f €", 
-			trv->id, trv->destination, trv->date, drv->name, drv->rating, trv->price);
+			"*ID*: %d%%0A*Destinazione*: %s%%0A*Data*: %s%%0A*Guidatore*: %s%%0A*Valutazione*: %d/10%%0A*Prezzo*: %.2f €%%0A*Posti*: %d", 
+			trv->id, trv->destination, trv->date, drv->name, drv->rating, trv->price, trv->seats);
 	
 	tg_send_message(msg, chat_id);
 	send_travels(NEXT(lst), chat_id);
@@ -238,6 +241,13 @@ void update_bot(struct bot *bot, struct json_object *update) {
 				else if (!strcmp(text, "/viaggi"))
 					send_travels(travels, bot->chat_id);
 
+				else if (!strcmp(text, "/prenota")) {
+					bot->state = BOOK_TRV;
+					bot->mode = SELECT_TRAVEL;
+					send_travels(travels, bot->chat_id);
+					tg_send_message("Scrivimi l'ID del viaggio che vuoi prenotare", bot->chat_id);
+				}
+
 				else if (!strcmp(text, "/cerca")) {
 					bot->state = SEARCH;
 					bot->mode = GET_SORT_MODE;
@@ -286,21 +296,25 @@ void update_bot(struct bot *bot, struct json_object *update) {
 				}
 
 				else if (!strcmp(text, "/miglior_guidatore")) {
-					struct driver *best = GET_OBJ(drivers);
+					list_t best_drivers = NULL;
+					int best_rating = 0;
 					
-					for (list_t drv = drivers; drv; drv = NEXT(drv)) {
-						struct driver *tmp = GET_OBJ(drv);
+					for (list_t tmp = drivers; tmp; tmp = NEXT(tmp)) {
+						struct driver *drv = GET_OBJ(tmp);
 
-						if (tmp->rating > best->rating)
-							best = tmp;
+						if (drv->rating > best_rating)
+							best_rating = drv->rating;
 					}
 
-					char msg[512];
-					snprintf(msg, 512, 
-							"*ID*: %d%%0A*Nome*: %s%%0A*Età*: %d%%0A*Veicolo*: %s%%0A*Posti*: %d%%0A*Valutazione*: %d%%0A%%0A", 
-							best->id, best->name, best->age, best->vehicle, best->seats, best->rating);
-					
-					tg_send_message(msg, bot->chat_id);
+					for (list_t tmp = drivers; tmp; tmp = NEXT(tmp)) {
+						struct driver *drv = GET_OBJ(tmp);
+
+						if (drv->rating == best_rating)
+							best_drivers = list_add(best_drivers, drv);
+					}
+
+					send_drivers(best_drivers, bot->chat_id);
+					dispose_list(best_drivers);
 				}
 
 				break;
@@ -310,26 +324,47 @@ void update_bot(struct bot *bot, struct json_object *update) {
 				bot->drvtmp = get_driver_by_id(drivers, id);
 
 				if (bot->drvtmp == NULL) {
-					tg_send_message("ID incorretto.%0AScrivi solo il numero dell'ID del guidatore da valutare", bot->chat_id);
+					tg_send_message("ID incorretto.%0AScrivi solo l'ID del guidatore da valutare", bot->chat_id);
 					break;
 				}
 
-				char msg[511] = {'\0'};
+				char msg[512] = {'\0'};
 
 				switch (bot->state) {
-				case RATE_DRV:
-					snprintf(msg, 511, "Scrivi la valutazione da dare a %s, da 1 a 10", bot->drvtmp->name);
-					bot->mode = RATE;
-					break;
+					case RATE_DRV:
+						snprintf(msg, 512, "Scrivi la valutazione da dare a %s, da 1 a 10", bot->drvtmp->name);
+						bot->mode = RATE;
+						break;
 
-				case MOD_DRV:
-					snprintf(msg, 511, "Scrivi il nuovo nome di %s", bot->drvtmp->name);
-					bot->mode = GET_NAME;
-					break;
+					case MOD_DRV:
+						snprintf(msg, 512, "Scrivi il nuovo nome di %s", bot->drvtmp->name);
+						bot->mode = GET_NAME;
+						break;
 				}
 
 				tg_send_message(msg, bot->chat_id);
 				break;
+			}
+
+			case SELECT_TRAVEL: {
+				int id = strtol(text, NULL, 10);
+				bot->trvtmp = get_travel(travels, id);
+
+				if (bot->drvtmp == NULL) {
+					tg_send_message("ID incorretto.%0AScrivi solo l'ID del viaggio da prenotare", bot->chat_id);
+					break;
+				}
+
+				bot->mode = GET_SEARCH_SEATS;
+				tg_send_message("Quanti posti vuoi prenotare?", bot->chat_id);
+			}
+
+			case GET_SEARCH_SEATS: {
+				int seats = strtol(text, NULL, 10);
+
+				if (seats > 0 && seats <= bot->trvtmp->seats) {
+
+				}
 			}
 
 			case RATE: {
@@ -381,24 +416,10 @@ void update_bot(struct bot *bot, struct json_object *update) {
 				size_t len = strlen(text) + 1;
 				bot->drvtmp->vehicle = malloc(len);
 				strncpy(bot->drvtmp->vehicle, text, len);
-				bot->mode = GET_SEATS;
-				tg_send_message("Inviami il numero di posti dispobibili", bot->chat_id);
-				break;
-			}
-
-			case GET_SEATS: {
-				char msg[511];
-				int seats = strtol(text, NULL, 10);
-
-				if (seats < 1) {
-					snprintf(msg, 511, "Numero posti non valido, immetti il numero di posti disponibili per %s", bot->drvtmp->name);
-					tg_send_message(msg, bot->chat_id);
-					break;
-				}
-
-				bot->drvtmp->seats = seats;
-
-				snprintf(msg, 511, "*Nome*: %s%%0A*Età*: %d%%0A*Veicolo*: %s%%0A*Posti*: %d", bot->drvtmp->name, bot->drvtmp->age, bot->drvtmp->vehicle, bot->drvtmp->seats);
+				bot->mode = CONFIRM;
+				
+				char msg[512];
+				snprintf(msg, 512, "*Nome*: %s%%0A*Età*: %d%%0A*Veicolo*: %s", bot->drvtmp->name, bot->drvtmp->age, bot->drvtmp->vehicle);
 				tg_send_message(msg, bot->chat_id);
 				tg_send_message("Confermi? [S/N]", bot->chat_id);
 				bot->mode = CONFIRM;
@@ -472,7 +493,7 @@ void update_bot(struct bot *bot, struct json_object *update) {
 					break;
 				}
 
-				char buf[31];
+				char buf[32];
 				strftime(buf, sizeof(buf), "%d-%m-%Y", &tm);
 				size_t buflen = strlen(buf) + 1;
 
@@ -493,7 +514,6 @@ void update_bot(struct bot *bot, struct json_object *update) {
 				}
 
 				bot->trvtmp->token = tmp->token;
-				printf("%ld\n", bot->trvtmp->token);
 				tg_send_message("Inviami il prezzo del viaggio", bot->chat_id);
 				bot->mode = GET_PRICE;
 				break;
@@ -501,18 +521,38 @@ void update_bot(struct bot *bot, struct json_object *update) {
 
 			case GET_PRICE: {
 				float price = atof(text);
+
+				if (price < 0) {
+					tg_send_message("Prezzo non valido, inviami il prezzo del viaggio", bot->chat_id);
+					break;
+				}
+
+				tg_send_message("Inviami il numero di posti disponibili nel veicolo", bot->chat_id);
 				bot->trvtmp->price = price;
-				bot->mode = CONFIRM;
+				bot->mode = GET_SEATS;
+				break;
+			}
+
+			case GET_SEATS: {
+				int seats = strtol(text, NULL, 10);
+
+				if (seats < 1) {
+					tg_send_message("Numero posti non valido, immetti un numero valido di posti disponibili", bot->chat_id);
+					break;
+				}
+
+				bot->trvtmp->seats = seats;
 
 				struct driver *drv = get_driver_by_token(drivers, bot->trvtmp->token);
-				char msg[511];
+				char msg[512];
 
-				snprintf(msg, 511, 
-					"*Destinazione*: %s%%0A*Data*: %s%%0A*Guidatore*: %s%%0A*Prezzo*: %.2f €", 
-					bot->trvtmp->destination, bot->trvtmp->date, drv->name, bot->trvtmp->price);
+				snprintf(msg, 512, 
+					"*Destinazione*: %s%%0A*Data*: %s%%0A*Guidatore*: %s%%0A*Prezzo*: %.2f €%%0A*Posti*: %d", 
+					bot->trvtmp->destination, bot->trvtmp->date, drv->name, bot->trvtmp->price, bot->trvtmp->seats);
 				
 				tg_send_message(msg, bot->chat_id);
 				tg_send_message("Confermi? [S/N]", bot->chat_id);
+				bot->mode = CONFIRM;
 				break;
 			}
 

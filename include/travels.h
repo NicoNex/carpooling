@@ -20,7 +20,7 @@ struct travel {
 	char *date;
 	float price;
 	char *destination;
-	// char *driver_name;
+	int seats;
 	int64_t token;
 };
 
