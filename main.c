@@ -42,7 +42,6 @@ enum modes {
 	DEL_TRAVEL,
 
 	GET_SORT_MODE,
-	GET_SEARCH_SEATS,
 	GET_QRY,
 
 	CONFIRM
@@ -60,9 +59,8 @@ enum commands {
 	ADD_TRV,
 	MOD_TRV,
 	DEL_TRV,
+	SRC_TRV,
 	BOOK_TRV,
-
-	SEARCH
 };
 
 
@@ -73,10 +71,11 @@ enum search_travels_modes {
 
 
 struct bot {
-	int64_t chat_id;
-	int state;
 	int mode;
+	int state;
+	int seatstmp;
 	int sort_mode;
+	int64_t chat_id;
 	struct driver *drvtmp;
 	struct travel *trvtmp;
 };
@@ -169,13 +168,13 @@ static void send_travels(const list_t lst, const int64_t chat_id) {
 }
 
 
-static void search_travels(const char *text, int64_t chat_id, int filter) {
+static void search_travels(const char *text, const int seats, const int64_t chat_id, const int filter) {
 	list_t lst = NULL;
 
 	for (list_t tmp = travels; tmp; tmp = NEXT(tmp)) {
 		struct travel *trv = GET_OBJ(tmp);
 
-		if (strstr(trv->destination, text))
+		if (strstr(trv->destination, text) && trv->seats >= seats)
 			lst = list_add(lst, trv);
 	}
 
@@ -249,9 +248,9 @@ void update_bot(struct bot *bot, struct json_object *update) {
 				}
 
 				else if (!strcmp(text, "/cerca")) {
-					bot->state = SEARCH;
-					bot->mode = GET_SORT_MODE;
-					tg_send_message("Vuoi ordinare la lista per prezzo o valutazione del guidatore? [P/V]", bot->chat_id);
+					bot->state = SRC_TRV;
+					bot->mode = GET_SEATS;
+					tg_send_message("Quanti posti disponibili vuoi cercare?", bot->chat_id);
 				}
 
 				else if (!strcmp(text, "/agg_guidatore")) {
@@ -346,25 +345,19 @@ void update_bot(struct bot *bot, struct json_object *update) {
 				break;
 			}
 
+			// TODO: fix this mode since it doesn't work
 			case SELECT_TRAVEL: {
 				int id = strtol(text, NULL, 10);
 				bot->trvtmp = get_travel(travels, id);
 
+				// Apparently this condition gets evaluated as true in any case
 				if (bot->drvtmp == NULL) {
 					tg_send_message("ID incorretto.%0AScrivi solo l'ID del viaggio da prenotare", bot->chat_id);
 					break;
 				}
 
-				bot->mode = GET_SEARCH_SEATS;
+				bot->mode = GET_SEATS;
 				tg_send_message("Quanti posti vuoi prenotare?", bot->chat_id);
-			}
-
-			case GET_SEARCH_SEATS: {
-				int seats = strtol(text, NULL, 10);
-
-				if (seats > 0 && seats <= bot->trvtmp->seats) {
-
-				}
 			}
 
 			case RATE: {
@@ -541,18 +534,47 @@ void update_bot(struct bot *bot, struct json_object *update) {
 					break;
 				}
 
-				bot->trvtmp->seats = seats;
+				switch (bot->state) {
+					case ADD_TRV:
+					case MOD_TRV: {
+						bot->trvtmp->seats = seats;
 
-				struct driver *drv = get_driver_by_token(drivers, bot->trvtmp->token);
-				char msg[512];
+						struct driver *drv = get_driver_by_token(drivers, bot->trvtmp->token);
+						char msg[512];
 
-				snprintf(msg, 512, 
-					"*Destinazione*: %s%%0A*Data*: %s%%0A*Guidatore*: %s%%0A*Prezzo*: %.2f €%%0A*Posti*: %d", 
-					bot->trvtmp->destination, bot->trvtmp->date, drv->name, bot->trvtmp->price, bot->trvtmp->seats);
-				
-				tg_send_message(msg, bot->chat_id);
-				tg_send_message("Confermi? [S/N]", bot->chat_id);
-				bot->mode = CONFIRM;
+						snprintf(msg, 512, 
+							"*Destinazione*: %s%%0A*Data*: %s%%0A*Guidatore*: %s%%0A*Prezzo*: %.2f €%%0A*Posti*: %d", 
+							bot->trvtmp->destination, bot->trvtmp->date, drv->name, bot->trvtmp->price, bot->trvtmp->seats);
+						
+						tg_send_message(msg, bot->chat_id);
+						tg_send_message("Confermi? [S/N]", bot->chat_id);
+						bot->mode = CONFIRM;
+						break;
+					}
+
+					case BOOK_TRV: {
+						if (seats > bot->trvtmp->seats)
+							tg_send_message("Numero di posti disponibili insufficiente", bot->chat_id);
+
+						else {
+							bot->seatstmp = seats;
+
+							char msg[512];
+							snprintf(msg, 512, "*Destinazione*: %s%%0A*Posti da prenotare*: %d", bot->trvtmp->destination, seats);
+							tg_send_message("Confermi? [S/N]", bot->chat_id);
+							bot->mode = CONFIRM;
+						}
+
+						break;
+					}
+
+					case SRC_TRV:
+						bot->seatstmp = seats;
+						bot->mode = GET_SORT_MODE;
+						tg_send_message("Vuoi ordinare la lista per prezzo o valutazione del guidatore? [P/V]", bot->chat_id);
+						break;
+				}
+
 				break;
 			}
 
@@ -581,7 +603,7 @@ void update_bot(struct bot *bot, struct json_object *update) {
 			}
 
 			case GET_QRY:
-				search_travels(text, bot->chat_id, bot->sort_mode);
+				search_travels(text, bot->seatstmp, bot->chat_id, bot->sort_mode);
 				bot->mode = NO_OP;
 				bot->state = DEFAULT;
 				break;
@@ -610,7 +632,15 @@ void update_bot(struct bot *bot, struct json_object *update) {
 							update_travels_file(travels);
 							send_travels(travels, bot->chat_id);
 							break;
+
+						case BOOK_TRV:
+							bot->trvtmp->seats -= bot->seatstmp;
+							update_travels_file(travels);
+							send_travels(travels, bot->chat_id);
+							break;
 					}
+				
+					tg_send_message("Ok", bot->chat_id);	
 					bot->mode = NO_OP;
 					bot->state = DEFAULT;
 				}
