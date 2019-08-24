@@ -153,8 +153,10 @@ static void send_drivers(const list_t lst, const int64_t chat_id) {
 
 
 static void send_travels(const list_t lst, const int64_t chat_id) {
-	if (lst == NULL)
+	if (lst == NULL) {
+		tg_send_message("Nessun viaggio trovato", chat_id);
 		return;
+	}
 
 	char msg[511];
 	struct travel *trv = GET_OBJ(lst);
@@ -234,6 +236,7 @@ void update_bot(struct bot *bot, struct json_object *update) {
 				else if (!strcmp(text, "/valuta")) {
 					bot->state = RATE_DRV;
 					bot->mode = SELECT_DRIVER;
+					send_drivers(drivers, bot->chat_id);
 					tg_send_message("Scrivimi l'ID del guidatore che vuoi valutare", bot->chat_id);
 				}
 
@@ -250,6 +253,7 @@ void update_bot(struct bot *bot, struct json_object *update) {
 				else if (!strcmp(text, "/cerca")) {
 					bot->state = SRC_TRV;
 					bot->mode = GET_SEATS;
+					send_travels(travels, bot->chat_id);
 					tg_send_message("Quanti posti disponibili vuoi cercare?", bot->chat_id);
 				}
 
@@ -284,6 +288,7 @@ void update_bot(struct bot *bot, struct json_object *update) {
 				else if (!strcmp(text, "/mod_viaggio")) {
 					bot->state = MOD_TRV;
 					bot->mode = MOD_TRAVEL;
+					send_travels(travels, bot->chat_id);
 					tg_send_message("Scrivimi l'ID del viaggio che vuoi modificare", bot->chat_id);
 				}
 
