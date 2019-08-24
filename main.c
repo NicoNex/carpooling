@@ -153,10 +153,8 @@ static void send_drivers(const list_t lst, const int64_t chat_id) {
 
 
 static void send_travels(const list_t lst, const int64_t chat_id) {
-	if (lst == NULL) {
-		tg_send_message("Nessun viaggio trovato", chat_id);
+	if (lst == NULL)
 		return;
-	}
 
 	char msg[511];
 	struct travel *trv = GET_OBJ(lst);
@@ -190,8 +188,36 @@ static void search_travels(const char *text, const int seats, const int64_t chat
 			break;
 	}
 
-	send_travels(lst, chat_id);
+	if (lst)
+		send_travels(lst, chat_id);
+	else
+		tg_send_message("Nessun viaggio trovato.%0AProva con criteri diversi 😅", chat_id);
+
 	dispose_list(lst);
+}
+
+
+void send_presentation_message(const int64_t chat_id) {
+	const char *msg = "Kowalski %0A\
+La tua spalla durante tutti i tuoi viaggi. %0A%0A\
+Lista dei comandi del bot: %0A%0A\
+/guidatori - visualizza l'elenco dei guidatori %0A\
+/miglior-guidatore - visualizza i guidatori col punteggio più alto %0A\
+/viaggi - visualizza l'elenco dei viaggi %0A\
+/valuta - valuta un guidatore %0A\
+/cerca - cerca tra i viaggi disponibili %0A\
+/prenota - prenota un viaggio tra quelli disponibili %0A\
+/agg_guidatore - aggiunge un guidatore %0A\
+/mod_guidatore - modifica un guidatore %0A\
+/canc_guidatore - cancella un guidatore %0A\
+/agg_viaggio - aggiunge un viaggio %0A\
+/mod_viaggio - modifica un viaggio %0A\
+/canc_viaggio - cancella un viaggio %0A\
+/annulla - annulla l'azione corrente%0A%0A\
+Link ai sorgenti del bot:%0A%0A\
+https://github.com/NicoNex/carpooling";
+
+tg_send_message(msg, chat_id);
 }
 
 
@@ -221,7 +247,7 @@ void update_bot(struct bot *bot, struct json_object *update) {
 
 			bot->state = DEFAULT;
 			bot->mode = NO_OP;
-			tg_send_message("Azione annullata", bot->chat_id);
+			tg_send_message("Azione annullata 👍🏻", bot->chat_id);
 			return;
 		}
 
@@ -229,6 +255,9 @@ void update_bot(struct bot *bot, struct json_object *update) {
 			case NO_OP:
 				if (!strcmp(text, "/ping"))
 					tg_send_message("Hey!", bot->chat_id);
+
+				else if (!strcmp(text, "/start"))
+					send_presentation_message(bot->chat_id);
 
 				else if (!strcmp(text, "/guidatori"))
 					send_drivers(drivers, bot->chat_id);
@@ -328,7 +357,7 @@ void update_bot(struct bot *bot, struct json_object *update) {
 				bot->drvtmp = get_driver_by_id(drivers, id);
 
 				if (bot->drvtmp == NULL) {
-					tg_send_message("ID incorretto.%0AScrivi solo l'ID del guidatore da valutare", bot->chat_id);
+					tg_send_message("ID incorretto.%0A💡 Scrivi solo l'ID del guidatore da valutare", bot->chat_id);
 					break;
 				}
 
@@ -355,7 +384,7 @@ void update_bot(struct bot *bot, struct json_object *update) {
 				bot->trvtmp = get_travel(travels, id);
 
 				if (bot->trvtmp == NULL) {
-					tg_send_message("ID incorretto.%0AScrivi solo l'ID del viaggio da prenotare", bot->chat_id);
+					tg_send_message("ID incorretto.%0A💡 Scrivi solo l'ID del viaggio da prenotare", bot->chat_id);
 					break;
 				}
 
@@ -369,7 +398,7 @@ void update_bot(struct bot *bot, struct json_object *update) {
 
 				if (rating < 1 || rating > 10) {
 					char msg[512];
-					snprintf(msg, 512, "Valutazione incorretta.%%0AScrivi la valutazione da dare a %s, da 1 a 10", bot->drvtmp->name);
+					snprintf(msg, 512, "Valutazione incorretta.%%0A💡 Scrivi la valutazione da dare a %s, da 1 a 10", bot->drvtmp->name);
 					tg_send_message(msg, bot->chat_id);
 					break;
 				}
@@ -379,7 +408,7 @@ void update_bot(struct bot *bot, struct json_object *update) {
 				bot->drvtmp = NULL;
 				bot->mode = NO_OP;
 				bot->state = DEFAULT;
-				tg_send_message("Grazie per il tuo feedback!", bot->chat_id);
+				tg_send_message("Grazie per il tuo feedback! 😁", bot->chat_id);
 				break;
 			}
 
@@ -397,7 +426,7 @@ void update_bot(struct bot *bot, struct json_object *update) {
 				int age = strtol(text, NULL, 10);
 
 				if (!age) {
-					snprintf(msg, 512, "Età incorretta.%%0AScrivi l'età di %s mandando solo il numero degli anni", bot->drvtmp->name);
+					snprintf(msg, 512, "Età incorretta.%%0A💡 Scrivi l'età di %s mandando solo il numero degli anni", bot->drvtmp->name);
 					tg_send_message(msg, bot->chat_id);
 					break;
 				}
@@ -428,13 +457,13 @@ void update_bot(struct bot *bot, struct json_object *update) {
 				struct driver *drv = get_driver_by_id(drivers, id);
 				
 				if (!drv) {
-					tg_send_message("ID non valido%0AInviami un ID valido", bot->chat_id);
+					tg_send_message("ID non valido 😅%0AInviami un ID valido ", bot->chat_id);
 					break;
 				}
 
 				travels = del_travels_with_token(travels, drv->token);
 				drivers = del_driver(drivers, id);
-				tg_send_message("Guidatore cancellato", bot->chat_id);
+				tg_send_message("Guidatore cancellato 👍🏻", bot->chat_id);
 				bot->mode = NO_OP;
 				bot->state = DEFAULT;
 				break;
@@ -443,12 +472,12 @@ void update_bot(struct bot *bot, struct json_object *update) {
 			case DEL_TRAVEL: {
 				int id = strtol(text, NULL, 10);
 				if (!get_travel(travels, id)) {
-					tg_send_message("ID non valido%0AInviami un ID valido", bot->chat_id);
+					tg_send_message("ID non valido 😅%0AInviami un ID valido", bot->chat_id);
 					break;
 				}
 
 				travels = del_travel(travels, id);
-				tg_send_message("Viaggio cancellato", bot->chat_id);
+				tg_send_message("Viaggio cancellato 👍🏻", bot->chat_id);
 				bot->mode = NO_OP;
 				bot->state = DEFAULT;
 				break;
@@ -459,7 +488,7 @@ void update_bot(struct bot *bot, struct json_object *update) {
 				bot->trvtmp = get_travel(travels, id);
 
 				if (bot->trvtmp == NULL) {
-					tg_send_message("ID incorretto.%0AScrivi solo il numero dell'ID del viaggio da modificare", bot->chat_id);
+					tg_send_message("ID incorretto.%0A💡 Scrivi solo il numero dell'ID del viaggio da modificare", bot->chat_id);
 					break;
 				}
 
@@ -486,7 +515,7 @@ void update_bot(struct bot *bot, struct json_object *update) {
 				epoch = mktime(&tm);
 
 				if (epoch < time(NULL)) {
-					tg_send_message("Non puoi settare una data nel passato, inviami una data corretta", bot->chat_id);
+					tg_send_message("Data non valida", bot->chat_id);
 					break;
 				}
 
@@ -506,7 +535,7 @@ void update_bot(struct bot *bot, struct json_object *update) {
 				int id = strtol(text, NULL, 10);
 				struct driver *tmp = get_driver_by_id(drivers, id);
 				if (!tmp) {
-					tg_send_message("ID non valido%0AInviami un ID valido", bot->chat_id);
+					tg_send_message("ID non valido 😓%0AInviami un ID valido", bot->chat_id);
 					break;
 				}
 
@@ -520,7 +549,7 @@ void update_bot(struct bot *bot, struct json_object *update) {
 				float price = atof(text);
 
 				if (price < 0) {
-					tg_send_message("Prezzo non valido, inviami il prezzo del viaggio", bot->chat_id);
+					tg_send_message("Prezzo non valido 😓, inviami il prezzo del viaggio", bot->chat_id);
 					break;
 				}
 
@@ -534,7 +563,7 @@ void update_bot(struct bot *bot, struct json_object *update) {
 				int seats = strtol(text, NULL, 10);
 
 				if (seats < 1) {
-					tg_send_message("Numero posti non valido, immetti un numero valido di posti disponibili", bot->chat_id);
+					tg_send_message("Numero posti non valido 😓, inviami un numero valido di posti disponibili", bot->chat_id);
 					break;
 				}
 
@@ -558,7 +587,7 @@ void update_bot(struct bot *bot, struct json_object *update) {
 
 					case BOOK_TRV: {
 						if (seats > bot->trvtmp->seats)
-							tg_send_message("Numero di posti disponibili insufficiente%0A"
+							tg_send_message("Numero di posti disponibili insufficiente 😓%0A"
 									"Inviami i posti da prenotare oppure /annulla per annullare l'azione corrente.", bot->chat_id);
 
 						else {
@@ -577,7 +606,7 @@ void update_bot(struct bot *bot, struct json_object *update) {
 					case SRC_TRV:
 						bot->seatstmp = seats;
 						bot->mode = GET_SORT_MODE;
-						tg_send_message("Vuoi ordinare la lista per prezzo o valutazione del guidatore? [P/V]", bot->chat_id);
+						tg_send_message("Vuoi ordinare la lista per prezzo o valutazione del guidatore? [[P/V]]", bot->chat_id);
 						break;
 				}
 
@@ -598,7 +627,7 @@ void update_bot(struct bot *bot, struct json_object *update) {
 
 					default:
 						tg_send_message(
-							"Risposta non valida, scrivi 'P' per ordinare i viaggi per prezzo,"
+							"Risposta non valida 😓, scrivi 'P' per ordinare i viaggi per prezzo,"
 							"'V' per ordinarli in base alla valutazione del guidatore", bot->chat_id);
 						return;
 				}
@@ -664,11 +693,11 @@ void update_bot(struct bot *bot, struct json_object *update) {
 
 					bot->mode = NO_OP;
 					bot->state = DEFAULT;
-					tg_send_message("Azione annullata", bot->chat_id);
+					tg_send_message("Azione annullata ❌", bot->chat_id);
 				}
 
 				else
-					tg_send_message("Risposta non valida, scrivi 's' per confermare o 'n' per annullare", bot->chat_id);
+					tg_send_message("Risposta non valida 😓, scrivi 's' per confermare o 'n' per annullare", bot->chat_id);
 
 				break;
 			}
