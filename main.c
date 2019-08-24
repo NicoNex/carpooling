@@ -16,7 +16,7 @@
 #include "include/travels.h"
 
 
-#define BOTNAME "carpooling"
+#define BOTNAME "kowalski"
 
 
 enum modes {
