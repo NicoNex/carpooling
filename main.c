@@ -345,19 +345,18 @@ void update_bot(struct bot *bot, struct json_object *update) {
 				break;
 			}
 
-			// TODO: fix this mode since it doesn't work
 			case SELECT_TRAVEL: {
 				int id = strtol(text, NULL, 10);
 				bot->trvtmp = get_travel(travels, id);
 
-				// Apparently this condition gets evaluated as true in any case
-				if (bot->drvtmp == NULL) {
+				if (bot->trvtmp == NULL) {
 					tg_send_message("ID incorretto.%0AScrivi solo l'ID del viaggio da prenotare", bot->chat_id);
 					break;
 				}
 
 				bot->mode = GET_SEATS;
 				tg_send_message("Quanti posti vuoi prenotare?", bot->chat_id);
+				break;
 			}
 
 			case RATE: {
@@ -554,13 +553,15 @@ void update_bot(struct bot *bot, struct json_object *update) {
 
 					case BOOK_TRV: {
 						if (seats > bot->trvtmp->seats)
-							tg_send_message("Numero di posti disponibili insufficiente", bot->chat_id);
+							tg_send_message("Numero di posti disponibili insufficiente%0A"
+									"Inviami i posti da prenotare oppure /annulla per annullare l'azione corrente.", bot->chat_id);
 
 						else {
 							bot->seatstmp = seats;
 
 							char msg[512];
 							snprintf(msg, 512, "*Destinazione*: %s%%0A*Posti da prenotare*: %d", bot->trvtmp->destination, seats);
+							tg_send_message(msg, bot->chat_id);
 							tg_send_message("Confermi? [S/N]", bot->chat_id);
 							bot->mode = CONFIRM;
 						}

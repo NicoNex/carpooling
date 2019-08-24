@@ -19,24 +19,16 @@ typedef struct node *list_t;
 #define GET_OBJ(node) (node->ptr)
 #define NEXT(node) (node->next)
 
-/*
- * Returns the pointer to the first node of a list.
- */
+// Returns the pointer to the head of the list.
 list_t new_list(void *ptr);
 
-/*
- * Adds an element to the list and returns the pointer to the head.
- */
+// Adds an element to the list and returns the pointer to the head.
 list_t list_add(list_t list, void *ptr);
 
-/*
- * Deletes a node from the list and returns the pointer to the head.
- */
+// Deletes a node from the list and returns the head.
 list_t list_del(list_t list, struct node *node);
 
-/*
- * This function frees the list.
- */
+// Frees the memory occupied by the list.
 void dispose_list(list_t list);
 
 

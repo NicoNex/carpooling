@@ -1,20 +1,20 @@
 {
   "travels":[
     {
-      "id":1,
-      "date":"01-06-2021",
-      "price":56.0,
-      "token":1565954484,
-      "seats":10,
-      "destination":"Porto Cesareo"
-    },
-    {
       "id":2,
       "date":"01-06-2020",
       "price":1500.0,
       "token":1565954476,
       "seats":10,
       "destination":"Bahamas"
+    },
+    {
+      "id":1,
+      "date":"01-06-2021",
+      "price":56.0,
+      "token":1565954484,
+      "seats":10,
+      "destination":"Porto Cesareo"
     }
   ]
 }
