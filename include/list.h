@@ -1,5 +1,5 @@
 /*
- * carpooling
+ * Kowalski
  * Copyright (C) 2019  Nicolò Santamaria
  */
 
@@ -15,8 +15,10 @@ struct node {
 
 typedef struct node *list_t;
 
-
+// Macro to get the pointer to the object contained in the node.
 #define GET_OBJ(node) (node->ptr)
+
+// Macro to get the pointer to the next node in the list.
 #define NEXT(node) (node->next)
 
 // Returns the pointer to the head of the list.

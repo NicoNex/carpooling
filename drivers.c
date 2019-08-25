@@ -1,5 +1,5 @@
 /*
- * carpooling
+ * Kowalski
  * Copyright (C) 2019  Nicolò Santamaria
  */
 
