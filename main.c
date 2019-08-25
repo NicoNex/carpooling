@@ -297,6 +297,7 @@ void update_bot(struct bot *bot, struct json_object *update) {
 				else if (!strcmp(text, "/mod_guidatore")) {
 					bot->state = MOD_DRV;
 					bot->mode = SELECT_DRIVER;
+					send_drivers(drivers, bot->chat_id);
 					tg_send_message("Scrivimi l'ID del guidatore che vuoi modificare", bot->chat_id);
 				}
 
@@ -515,7 +516,7 @@ void update_bot(struct bot *bot, struct json_object *update) {
 				epoch = mktime(&tm);
 
 				if (epoch < time(NULL)) {
-					tg_send_message("Data non valida", bot->chat_id);
+					tg_send_message("Data non valida, inviami una data valida", bot->chat_id);
 					break;
 				}
 
@@ -563,7 +564,7 @@ void update_bot(struct bot *bot, struct json_object *update) {
 				int seats = strtol(text, NULL, 10);
 
 				if (seats < 1) {
-					tg_send_message("Numero posti non valido 😓, inviami un numero valido di posti disponibili", bot->chat_id);
+					tg_send_message("Numero posti non valido 😓, inviami un numero valido di posti", bot->chat_id);
 					break;
 				}
 

@@ -91,10 +91,10 @@ Di conseguenza il file *TOKEN* è necessario per l'esecuzione del programma.
 | travel              | struct                | Il tipo che rappresenta un passaggio.                                       |  id: int, date: char *,   price: float, destination: char *,   seats: int, token: long                                                                                                                                          |
 
 ### Progettazione di librerie e funzioni
-Le librerie progettate sono `drivers.h`, `filehandler.h`, `list.h`, `travels.h` e uTron per Telegram.
+Le librerie progettate sono `drivers.h`, `filehandler.h`, `list.h`, `travels.h` e [uTron](https://gitlab.com/NicoNex/utron) per Telegram.
 
 Per una documentazione completa fai riferimento a ciascun header file:
-··* [drivers.h](https://github.com/NicoNex/kowalski/blob/master/include/drivers.h)
-··* [filehandler.h](https://github.com/NicoNex/kowalski/blob/master/include/filehandler.h)
-··* [list.h](https://github.com/NicoNex/kowalski/blob/master/include/list.h)
-··* [travels.h](https://github.com/NicoNex/kowalski/blob/master/include/travels.h)
+- [drivers.h](https://github.com/NicoNex/kowalski/blob/master/include/drivers.h)
+- [filehandler.h](https://github.com/NicoNex/kowalski/blob/master/include/filehandler.h)
+- [list.h](https://github.com/NicoNex/kowalski/blob/master/include/list.h)
+- [travels.h](https://github.com/NicoNex/kowalski/blob/master/include/travels.h)
