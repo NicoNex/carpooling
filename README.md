@@ -71,13 +71,21 @@ Per installarle su **Ubuntu** e derivate basterà il comando:
 sudo apt install libcurl-dev libjson-c-dev
 ```
 
-Una volta installate basterà digitare nel terminale
-```sh
-make
-```
-trovandosi nella root del progetto. Verrà così generato il binario **kowalski** che potrà essere eseguito.
+Una volta installate basterà digitare nel terminale `make` trovandosi nella root del progetto. Verrà così generato il binario `kowalski` che potrà essere eseguito.
 
 Una volta eseguito il bot sarà in funzione e potrà essere usato contattandolo allo username @crplng_bot collegato al token di telegram scritto nel file *TOKEN* presente nella root del progetto.
 Di conseguenza il file *TOKEN* è necessario per l'esecuzione del programma.
 
 ## Progettazione
+
+### Progettazione dei tipi e strutture dati
+
+| Nome                | Tipologia             | Descrizione                                                                 | Campi                                                                                                                                                                                                          |
+|---------------------|-----------------------|-----------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| bot                 | struct                |  Descrive il contesto di esecuzione di una sessione con un utente Telegram. |  mode: int state: int seatstmp: int sort_mode: int chat_id long drvtmp: struct driver * trvtmp: struct travel *                                                                                                |
+| modes               | enum                  |  Contiene tutte le modalità in cui il bot si può trovare.                   | NO_OP, SELECT_DRIVER, SELECT_TRAVEL, RATE, GET_NAME, GET_AGE, GET_VEHICLE, DEL_DRIVER, GET_DESTINATION, GET_DATE, GET_DRIVER_ID, GET_PRICE, GET_SEATS, MOD_TRAVEL, DEL_TRAVEL, GET_SORT_MODE, GET_QRY, CONFIRM |
+| commands            | enum                  |  Contiene la classificazione dei comandi   in esecuzione.                   | DEFAULT, RATE_DRV, ADD_DRV, MOD_DRV, DEL_DRV, ADD_TRV, MOD_TRV, DEL_TRV, SRC_TRV, BOOK_TRV                                                                                                                     |
+| search_travel_modes | enum                  |  Contiene le modalità di ordinamento dei   passaggi cercati.                | BY_PRICE, BY_RATING                                                                                                                                                                                            |
+| list_t              | typedef struct node * |  Il tipo list_t rappresenta il puntatore alla testa della lista             | struct node *                                                                                                                                                                                                  |
+| node                | struct                |  Il tipo che rappresenta un nodo in una   lista puntata.                    |  ptr: void * next: struct node *                                                                                                                                                                               |
+### Progettazione di librerie e funzioni
