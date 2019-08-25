@@ -147,7 +147,7 @@ static void send_drivers(const list_t lst, const int64_t chat_id) {
 			"*ID*: %d%%0A*Nome*: %s%%0A*Età*: %d%%0A*Veicolo*: %s%%0A*Valutazione*: %d/10", 
 			drv->id, drv->name, drv->age, drv->vehicle, drv->rating);
 	
-	tg_send_message(msg, chat_id);
+	tg_send_message_opts(msg, chat_id, PARSE_MARKDOWN);
 	send_drivers(NEXT(lst), chat_id);
 }
 
@@ -163,7 +163,7 @@ static void send_travels(const list_t lst, const int64_t chat_id) {
 			"*ID*: %d%%0A*Destinazione*: %s%%0A*Data*: %s%%0A*Guidatore*: %s%%0A*Valutazione*: %d/10%%0A*Prezzo*: %.2f €%%0A*Posti*: %d", 
 			trv->id, trv->destination, trv->date, drv->name, drv->rating, trv->price, trv->seats);
 	
-	tg_send_message(msg, chat_id);
+	tg_send_message_opts(msg, chat_id, PARSE_MARKDOWN);
 	send_travels(NEXT(lst), chat_id);
 }
 
@@ -202,7 +202,7 @@ void send_presentation_message(const int64_t chat_id) {
 La tua spalla durante tutti i tuoi viaggi. %0A%0A\
 Lista dei comandi del bot: %0A%0A\
 /guidatori - visualizza l'elenco dei guidatori %0A\
-/miglior-guidatore - visualizza i guidatori col punteggio più alto %0A\
+/miglior_guidatore - visualizza i guidatori col punteggio più alto %0A\
 /viaggi - visualizza l'elenco dei viaggi %0A\
 /valuta - valuta un guidatore %0A\
 /cerca - cerca tra i viaggi disponibili %0A\
@@ -215,12 +215,12 @@ Lista dei comandi del bot: %0A%0A\
 /canc_viaggio - cancella un viaggio %0A\
 /annulla - annulla l'azione corrente%0A%0A\
 Link ai sorgenti del bot:%0A%0A\
-https://github.com/NicoNex/carpooling";
+https://github.com/NicoNex/kowalski";
 
-tg_send_message(msg, chat_id);
+	tg_send_message(msg, chat_id);
 }
 
-
+// TODO: change from tg_send_message to tg_send_message_opts when needed.
 void update_bot(struct bot *bot, struct json_object *update) {
 	struct json_object *messageobj, *fromobj, *usrobj, *textobj;
 
@@ -446,7 +446,7 @@ void update_bot(struct bot *bot, struct json_object *update) {
 				
 				char msg[512];
 				snprintf(msg, 512, "*Nome*: %s%%0A*Età*: %d%%0A*Veicolo*: %s", bot->drvtmp->name, bot->drvtmp->age, bot->drvtmp->vehicle);
-				tg_send_message(msg, bot->chat_id);
+				tg_send_message_opts(msg, bot->chat_id, PARSE_MARKDOWN);
 				tg_send_message("Confermi? [S/N]", bot->chat_id);
 				bot->mode = CONFIRM;
 				break;
@@ -579,7 +579,7 @@ void update_bot(struct bot *bot, struct json_object *update) {
 							"*Destinazione*: %s%%0A*Data*: %s%%0A*Guidatore*: %s%%0A*Prezzo*: %.2f €%%0A*Posti*: %d", 
 							bot->trvtmp->destination, bot->trvtmp->date, drv->name, bot->trvtmp->price, bot->trvtmp->seats);
 						
-						tg_send_message(msg, bot->chat_id);
+						tg_send_message_opts(msg, bot->chat_id, PARSE_MARKDOWN);
 						tg_send_message("Confermi? [S/N]", bot->chat_id);
 						bot->mode = CONFIRM;
 						break;
@@ -595,7 +595,7 @@ void update_bot(struct bot *bot, struct json_object *update) {
 
 							char msg[512];
 							snprintf(msg, 512, "*Destinazione*: %s%%0A*Posti da prenotare*: %d", bot->trvtmp->destination, seats);
-							tg_send_message(msg, bot->chat_id);
+							tg_send_message_opts(msg, bot->chat_id, PARSE_MARKDOWN);
 							tg_send_message("Confermi? [S/N]", bot->chat_id);
 							bot->mode = CONFIRM;
 						}
@@ -606,7 +606,7 @@ void update_bot(struct bot *bot, struct json_object *update) {
 					case SRC_TRV:
 						bot->seatstmp = seats;
 						bot->mode = GET_SORT_MODE;
-						tg_send_message("Vuoi ordinare la lista per prezzo o valutazione del guidatore? [[P/V]]", bot->chat_id);
+						tg_send_message("Vuoi ordinare la lista per prezzo o valutazione del guidatore? [P/V]", bot->chat_id);
 						break;
 				}
 
